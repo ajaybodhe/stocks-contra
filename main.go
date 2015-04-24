@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ajaybodhe/core"
+	"github.com/ajaybodhe/stocks-contra/core"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang/glog"
 )
