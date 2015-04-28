@@ -44,9 +44,11 @@ var StocksContraConfig struct {
 	}*/
 }
 
+const allowAllFilesCommand = "allowAllFiles=true"
+
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	conf.ReadConfig(gconfFile, &StocksContraConfig)
-	StocksContraConfig.DB.ConnID = fmt.Sprintf("%s:%s@%s(%s:%d)/%s", StocksContraConfig.DB.Username, StocksContraConfig.DB.Password, StocksContraConfig.DB.Protocol,
-		StocksContraConfig.DB.Host, StocksContraConfig.DB.Port, StocksContraConfig.DB.DB)
+	StocksContraConfig.DB.ConnID = fmt.Sprintf("%s:%s@%s(%s:%d)/%s?%s", StocksContraConfig.DB.Username, StocksContraConfig.DB.Password, StocksContraConfig.DB.Protocol,
+		StocksContraConfig.DB.Host, StocksContraConfig.DB.Port, StocksContraConfig.DB.DB, allowAllFilesCommand)
 }
