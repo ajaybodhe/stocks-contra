@@ -20,15 +20,18 @@ const (
 	forwardSlashChar   = "/"
 	fileDownloadPath   = "/tmp/"
 	truncateTableQuery = "truncate table %s"
-	/* mysql --local-infile -uroot -ppassword NSE */
-	loadFileQUery = "LOAD DATA LOCAL INFILE '%s' INTO TABLE %s FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE %d ROWS;"
-	/* Data format is DDMMYYYY */
-	NSEDeliveryPercentageDataLink  = "http://www.nseindia.com/archives/equities/mto/MTO_%02d%02d%04d.DAT"
-	createTableQuery               = "CREATE TABLE IF NOT EXISTS `%s` ( `record_type` INTEGER(4), `sr_no` INTEGER(4), `symbol` varchar (200), `security_type` varchar(10), `traded_quantity` INTEGER(20), `deliverable_quantity` INTEGER(20), delivery_percentage double, PRIMARY KEY (`symbol`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;"
-	NSEDeliveryPercentageTable     = "NSEDeliveryData_%02d%02d%04d"
-	NSESecuritiesFullBhavDataTable = "NSESecuritiesFullBhavData_%02d%02d%04d"
-	NSESecuritiesFullBhavDataLink  = "http://www.nseindia.com/products/content/sec_bhavdata_full.csv"
-	createTableQueryNSESFBD        = "CREATE TABLE IF NOT EXISTS `%s` ( `symbol` varchar (200), `security_type` varchar(10), `date` Date, `prev_close` DOUBLE, `open_price` DOUBLE, `high_price` DOUBLE,`low_price` DOUBLE, `last_price` DOUBLE, `close_price` DOUBLE, `avg_price` DOUBLE, `ttl_trd_qnty` INTEGER, `turnover_lacs` DOUBLE, `no_of_trades` INTEGER, `deliv_qty` INTEGER, `deliv_per` double, PRIMARY KEY (`symbol`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;"
+	loadFileQuery      = "LOAD DATA LOCAL INFILE '%s' INTO TABLE %s FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE %d ROWS;"
+
+	createTableQuery           = "CREATE TABLE IF NOT EXISTS `%s` ( `record_type` INTEGER(4), `sr_no` INTEGER(4), `symbol` varchar (200), `security_type` varchar(10), `traded_quantity` INTEGER(20), `deliverable_quantity` INTEGER(20), delivery_percentage double, PRIMARY KEY (`symbol`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;"
+	NSEDeliveryPercentageTable = "NSEDeliveryData_%02d%02d%04d"
+
+	loadFileQueryNSEFBD           = "LOAD DATA LOCAL INFILE '%s' INTO TABLE NSESecuritiesFullBhavData FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (symbol, security_type, @date, prev_close, open_price, high_price, low_price, last_price, close_price, avg_price, ttl_trd_qnty, turnover_lacs, no_of_trades, deliv_qty, deliv_per) set date=STR_TO_DATE(@date, '%s');"
+	NSEFBDDateFormat              = "%d-%M-%Y"
+	NSEDeliveryPercentageDataLink = "http://www.nseindia.com/archives/equities/mto/MTO_%02d%02d%04d.DAT"
+	//NSESecuritiesFullBhavDataTable = "NSESecuritiesFullBhavData_%02d%02d%04d"
+	NSESecuritiesFullBhavDataLink = "http://www.nseindia.com/products/content/sec_bhavdata_full.csv"
+	createTableQueryNSESFBD       = "CREATE TABLE IF NOT EXISTS `NSESecuritiesFullBhavData` ( `symbol` varchar (200), `security_type` varchar(10), `date` Date, `prev_close` DOUBLE, `open_price` DOUBLE, `high_price` DOUBLE,`low_price` DOUBLE, `last_price` DOUBLE, `close_price` DOUBLE, `avg_price` DOUBLE, `ttl_trd_qnty` INTEGER, `turnover_lacs` DOUBLE, `no_of_trades` INTEGER, `deliv_qty` INTEGER, `deliv_per` double, PRIMARY KEY (`symbol`, `date`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;"
+	deleteTableQueryNSEFBD        = "delete from NSESecuritiesFullBhavData where date in (select date from (select min(date) date from NSESecuritiesFullBhavData) D);"
 )
 
 var NSESectoralIndexList = map[string]string{
@@ -76,7 +79,7 @@ func initDB() {
 }
 
 func getNSEIndexList(list map[string]string) {
-	for key, value := range NSEBroadMarketIndexList {
+	for key, value := range list {
 		glog.Infoln(key, value)
 
 		req, err := http.NewRequest("GET", value, nil)
@@ -124,7 +127,7 @@ func getNSEIndexList(list map[string]string) {
 			rows.Close()
 		}
 
-		sqlQueryLoadFIle := fmt.Sprintf(loadFileQUery, path, key, 1)
+		sqlQueryLoadFIle := fmt.Sprintf(loadFileQuery, path, key, 1)
 		rows, err = proddbhandle.Query(sqlQueryLoadFIle)
 		if err != nil {
 			glog.Errorln(err)
@@ -234,7 +237,7 @@ func getNSEDeliveryPercentageData(noOfDays int) {
 		}
 
 		/* Load csv into mysql */
-		sqlQueryLoadFIle := fmt.Sprintf(loadFileQUery, path, NSEDeliveryPercentageTableName, 4)
+		sqlQueryLoadFIle := fmt.Sprintf(loadFileQuery, path, NSEDeliveryPercentageTableName, 4)
 		rows, err = proddbhandle.Query(sqlQueryLoadFIle)
 		if err != nil {
 			glog.Errorln(err)
@@ -260,7 +263,7 @@ func getNSEDeliveryPercentageData(noOfDays int) {
 	}
 }
 
-func getNSESecuritiesFullBhavData() { //noOfDays int) {
+func getNSESecuritiesFullBhavData(deleteFromTable bool) { //noOfDays int) {
 	//count := 0
 	//for i := 0; count < noOfDays; i++ {
 	/* get date for day ith */
@@ -315,20 +318,38 @@ func getNSESecuritiesFullBhavData() { //noOfDays int) {
 	fmt.Println("%s with %v bytes downloaded", path, size)
 
 	/* create table query */
-	NSESecuritiesFullBhavDataTableName := fmt.Sprintf(NSESecuritiesFullBhavDataTable, day, month, year)
-	sqlQueryCreateTable := fmt.Sprintf(createTableQueryNSESFBD, NSESecuritiesFullBhavDataTableName)
-	rows, err := proddbhandle.Query(sqlQueryCreateTable)
-	if err != nil {
-		glog.Errorln(err)
-		fmt.Println(err)
-	}
-	if rows != nil {
-		rows.Close()
-	}
+	/*
+		NSESecuritiesFullBhavDataTableName := fmt.Sprintf(NSESecuritiesFullBhavDataTable, day, month, year)
+		sqlQueryCreateTable := fmt.Sprintf(createTableQueryNSESFBD, NSESecuritiesFullBhavDataTableName)
+		rows, err := proddbhandle.Query(sqlQueryCreateTable)
+		if err != nil {
+			glog.Errorln(err)
+			fmt.Println(err)
+		}
+		if rows != nil {
+			rows.Close()
+		}
+	*/
 
 	/* truncate tables if already exist */
-	sqlQueryTruncateTable := fmt.Sprintf(truncateTableQuery, NSESecuritiesFullBhavDataTableName)
-	rows, err = proddbhandle.Query(sqlQueryTruncateTable)
+	/*
+		sqlQueryTruncateTable := fmt.Sprintf(truncateTableQuery, NSESecuritiesFullBhavDataTableName)
+		rows, err = proddbhandle.Query(sqlQueryTruncateTable)
+		if err != nil {
+			glog.Errorln(err)
+			fmt.Println(err)
+		}
+		if rows != nil {
+			rows.Close()
+		}
+	*/
+
+	/* Load csv into mysql */
+	sqlQueryLoadFIle := fmt.Sprintf(loadFileQueryNSEFBD, path, NSEFBDDateFormat)
+	fmt.Println("bhav data file ", path)
+	fmt.Println("bhav query", sqlQueryLoadFIle)
+
+	rows, err := proddbhandle.Query(sqlQueryLoadFIle)
 	if err != nil {
 		glog.Errorln(err)
 		fmt.Println(err)
@@ -337,15 +358,16 @@ func getNSESecuritiesFullBhavData() { //noOfDays int) {
 		rows.Close()
 	}
 
-	/* Load csv into mysql */
-	sqlQueryLoadFIle := fmt.Sprintf(loadFileQUery, path, NSESecuritiesFullBhavDataTableName, 1)
-	rows, err = proddbhandle.Query(sqlQueryLoadFIle)
-	if err != nil {
-		glog.Errorln(err)
-		fmt.Println(err)
-	}
-	if rows != nil {
-		rows.Close()
+	/* delete from table the data for oldest day */
+	if deleteFromTable == true {
+		rows, err = proddbhandle.Query(deleteTableQueryNSEFBD)
+		if err != nil {
+			glog.Errorln(err)
+			fmt.Println(err)
+		}
+		if rows != nil {
+			rows.Close()
+		}
 	}
 
 	/* delete the downloaded file */
@@ -378,9 +400,9 @@ func Serve() {
 	initDB()
 	client = &http.Client{}
 	/* Call to this function depends on passed argument */
-	//getNSESectoralIndexLists()
-	//getNSEBroadMarketIndexLists()
-	//getNSEDeliveryPercentageData(5)
-	getNSESecuritiesFullBhavData()
+	getNSESectoralIndexLists()
+	getNSEBroadMarketIndexLists()
+	getNSEDeliveryPercentageData(5)
+	getNSESecuritiesFullBhavData(false)
 	retriveNSESecuritiesTradeSignals()
 }
