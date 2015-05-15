@@ -6,7 +6,7 @@ sudo chmod 0777 -R /tmp/
 import mysql dump, username=root password=password
 
 ##mysql login
-mysql --local-infile -u root -p password NSE
+mysql --local-infile -uroot -ppassword NSE
 
 ##go installation steps
 1.Download latest tar from https://golang.org/dl/
