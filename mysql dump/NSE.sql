@@ -406,6 +406,42 @@ INSERT INTO `METAL` VALUES ('Bhushan Steel Ltd.','METALS','BHUSANSTL','EQ','INE8
 UNLOCK TABLES;
 
 --
+-- Table structure for table `MoneyControlSecurityDetails`
+--
+
+DROP TABLE IF EXISTS `MoneyControlSecurityDetails`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `MoneyControlSecurityDetails` (
+  `symbol` varchar(200) NOT NULL DEFAULT '',
+  `eps` double DEFAULT NULL,
+  `pe` double DEFAULT NULL,
+  `industry_pe` double DEFAULT NULL,
+  `market_cap` double DEFAULT NULL,
+  `face_value` double DEFAULT NULL,
+  `book_value` double DEFAULT NULL,
+  `dividend` double DEFAULT NULL,
+  `pb` double DEFAULT NULL,
+  `pc` double DEFAULT NULL,
+  `div_yield` double DEFAULT NULL,
+  `promoter_holding` double DEFAULT NULL,
+  `dii_holding` double DEFAULT NULL,
+  `fii_holding` double DEFAULT NULL,
+  `other_holding` double DEFAULT NULL,
+  PRIMARY KEY (`symbol`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `MoneyControlSecurityDetails`
+--
+
+LOCK TABLES `MoneyControlSecurityDetails` WRITE;
+/*!40000 ALTER TABLE `MoneyControlSecurityDetails` DISABLE KEYS */;
+/*!40000 ALTER TABLE `MoneyControlSecurityDetails` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `NIFTY_MIDCAP_50`
 --
 
@@ -726,4 +762,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-05-15 19:33:14
+-- Dump completed on 2015-05-21 19:47:21

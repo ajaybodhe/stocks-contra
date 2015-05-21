@@ -2,6 +2,9 @@
 ##permissions
 sudo chmod 0777 -R /tmp/
 
+##lynx
+sudo apt-get install lynx
+
 ##mysql
 import mysql dump, username=root password=password
 
