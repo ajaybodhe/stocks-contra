@@ -1,10 +1,18 @@
 package util
 
 const (
-	ForwardSlashChar   = "/"
-	FileDownloadPath   = "/tmp/"
-	TruncateTableQuery = "truncate table %s"
-	LoadFileQuery      = "LOAD DATA LOCAL INFILE '%s' INTO TABLE %s FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE %d ROWS;"
+	NewLineChar           = "\n"
+	SpaceChar             = " "
+	PercentageChar        = "%"
+	CommaChar             = ","
+	ForwardSlashChar      = "/"
+	EmptyString           = ""
+	StartBreakTag         = "<b>"
+	EndBreakTag           = "</b>"
+	MoneycontrolNSESymbol = "NSE: "
+	FileDownloadPath      = "/tmp/"
+	TruncateTableQuery    = "truncate table %s"
+	LoadFileQuery         = "LOAD DATA LOCAL INFILE '%s' INTO TABLE %s FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE %d ROWS;"
 
 	LoadFileQueryNSEFBD           = "LOAD DATA LOCAL INFILE '%s' INTO TABLE NSESecuritiesFullBhavData FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (symbol, security_type, @date, prev_close, open_price, high_price, low_price, last_price, close_price, avg_price, ttl_trd_qnty, turnover_lacs, no_of_trades, deliv_qty, deliv_per) set date=STR_TO_DATE(@date, '%s');"
 	NSEFBDDateFormat              = "%d-%M-%Y"
@@ -13,24 +21,33 @@ const (
 	CreateTableQueryNSESFBD       = "CREATE TABLE IF NOT EXISTS `NSESecuritiesFullBhavData` ( `symbol` varchar (200), `security_type` varchar(10), `date` Date, `prev_close` DOUBLE, `open_price` DOUBLE, `high_price` DOUBLE,`low_price` DOUBLE, `last_price` DOUBLE, `close_price` DOUBLE, `avg_price` DOUBLE, `ttl_trd_qnty` INTEGER, `turnover_lacs` DOUBLE, `no_of_trades` INTEGER, `deliv_qty` INTEGER, `deliv_per` double, PRIMARY KEY (`symbol`, `date`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;"
 	DeleteTableQueryNSEFBD        = "delete from NSESecuritiesFullBhavData where date in (select date from (select min(date) date from NSESecuritiesFullBhavData) D);"
 
-	NSEGetLiveQuoteURL     = "http://nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol=%s&illiquid=0&smeFlag=0&itpFlag=0"
-	MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s%sp&type=1&section=mc_home"
+	NSEGetLiveQuoteURL = "http://nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol=%s&illiquid=0&smeFlag=0&itpFlag=0"
+	//MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s%sp&type=1&section=mc_home"
+	MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s&type=1&callback=suggest1&section=mc_home"
 
 	/* Moneycontrol Constants */
-	EPS             = "EPS (TTM)"
-	IndustryPE      = "INDUSTRY P/E"
-	PE              = "P/E"
-	MarketCap       = "MARKET CAP (Rs Cr)"
-	BookValue       = "BOOK VALUE (Rs)"
-	Dividend        = "DIV (%)"
-	PB              = "PRICE/BOOK"
-	PC              = "P/C"
-	FV              = "FACE VALUE (Rs)"
-	DivYield        = "DIV YIELD.(%)"
-	FIIHolding      = "FII"
-	DIIHolding      = "DII"
-	PromoterHolding = "Promoter"
-	OtherHolding    = "Others"
+	EPS                 = "EPS (TTM)"
+	IndustryPE          = "INDUSTRY P/E"
+	PE                  = "P/E"
+	MarketCap           = "MARKET CAP (Rs Cr)"
+	BookValue           = "BOOK VALUE (Rs)"
+	Dividend            = "DIV (%)"
+	PB                  = "PRICE/BOOK"
+	PC                  = "P/C"
+	FV                  = "FACE VALUE (Rs)"
+	DivYield            = "DIV YIELD.(%)"
+	ShareHoldingPattern = "Share Holding Pattern in (%)"
+	FIIHolding          = "FII"
+	DIIHolding          = "DII"
+	PromoterHolding     = "Promoter"
+	OtherHolding        = "Others"
+	/* we can use regex matching to skyp 4 chars, match with [0-9.]*/
+	MoneControlLiveQuoteSkipCharCount       = 4
+	MoneControlPromoterHoldingSkipCharCount = 1
+	MoneControlFIIHoldingSkipCharCount      = 6
+	CheckScriptChars                        = 3
+	MoneControlOtherHoldingSkipCharCount    = 3
+	FloatSizeBit32                          = 32
 )
 
 var NSESectoralIndexList = map[string]string{
