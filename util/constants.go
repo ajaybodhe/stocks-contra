@@ -26,6 +26,7 @@ const (
 	MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s&type=1&callback=suggest1&section=mc_home"
 
 	/* Moneycontrol Constants */
+	Sector              = "SECTOR:"
 	EPS                 = "EPS (TTM)"
 	IndustryPE          = "INDUSTRY P/E"
 	PE                  = "P/E"
@@ -43,6 +44,8 @@ const (
 	OtherHolding        = "Others"
 	/* we can use regex matching to skyp 4 chars, match with [0-9.]*/
 	MoneControlLiveQuoteSkipCharCount       = 4
+	MoneControlSectorSkipCharCount          = 5
+	MoneControlAlternateSectorSkipCharCount = 8
 	MoneControlPromoterHoldingSkipCharCount = 1
 	MoneControlFIIHoldingSkipCharCount      = 6
 	CheckScriptChars                        = 3

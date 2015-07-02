@@ -17,4 +17,5 @@ type MoneyControlSecurityStructure struct {
 	FIIHolding      float32
 	DIIHolding      float32
 	OtherHolding    float32
+	Sector          string
 }

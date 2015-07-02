@@ -60,7 +60,20 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		quoteStr = getHttpQuoteFile(quoteURL)
 	}
 
-	valueStr, index := parseMoneyControlValue(quoteStr, util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index := parseMoneyControlValue(quoteStr, util.Sector, util.MoneControlSectorSkipCharCount, util.NewLineChar)
+	if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
+		mcss.Sector = valueStr
+	} else {
+		valueStr, index = parseMoneyControlValue(quoteStr, util.Sector, util.MoneControlAlternateSectorSkipCharCount, util.NewLineChar)
+		if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
+			mcss.Sector = valueStr
+		} else {
+			glog.Errorln("Failed to parse sector")
+			mcss.Sector = ""
+		}
+	}
+
+	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	value, err := strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse market cap", err.Error())

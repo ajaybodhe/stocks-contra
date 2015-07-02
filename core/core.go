@@ -38,9 +38,8 @@ func initDB() {
 func Serve() {
 	/* TBD AJAY
 	decide upon the structure of code,
-	write seperate files
-	convert each function to an api
-	few ratios missing: debt/equity
+	parallelise api calls
+	few ratios missing: debt/equity, roe, roce, roa
 	*/
 	initDB()
 	client = &http.Client{}

@@ -8,11 +8,11 @@ import (
 	"github.com/golang/glog"
 )
 
-const allSecurityDetailsSql = "select symbol, eps, pe, industry_pe, market_cap, book_value, dividend, pb, pc, face_value, div_yield, promoter_holding, fii_holding, dii_holding, other_holding from MoneyControlSecurityDetails"
+const allSecurityDetailsSql = "select symbol, sector, eps, pe, industry_pe, market_cap, book_value, dividend, pb, pc, face_value, div_yield, promoter_holding, fii_holding, dii_holding, other_holding from MoneyControlSecurityDetails"
 
 func ReadSecurityDetails(db util.DB, securitySymbol string) (*coreStructures.MoneyControlSecurityStructure, error) {
 
-	securityDetailsSql := "select symbol, eps, pe, industry_pe, market_cap, book_value, dividend, pb, pc, face_value, div_yield, promoter_holding, fii_holding, dii_holding, other_holding from MoneyControlSecurityDetails where symbol=" + "\"" + securitySymbol + "\""
+	securityDetailsSql := "select symbol, sector, eps, pe, industry_pe, market_cap, book_value, dividend, pb, pc, face_value, div_yield, promoter_holding, fii_holding, dii_holding, other_holding from MoneyControlSecurityDetails where symbol=" + "\"" + securitySymbol + "\""
 	rows, err := db.Query(securityDetailsSql)
 	if err != nil {
 		return nil, fmt.Errorf("fetch security symbol=%s details err: sql error:%s\n", securitySymbol, err.Error())
@@ -23,7 +23,7 @@ func ReadSecurityDetails(db util.DB, securitySymbol string) (*coreStructures.Mon
 	var symbol string
 
 	if rows.Next() {
-		err = rows.Scan(&symbol, &mcss.EPS, &mcss.PE, &mcss.IndustryPE, &mcss.MarketCap, &mcss.BookValue, &mcss.Dividend, &mcss.PB, &mcss.PC, &mcss.FaceValue, &mcss.DivYield, &mcss.PromoterHolding, &mcss.DIIHolding, &mcss.FIIHolding, &mcss.OtherHolding)
+		err = rows.Scan(&symbol, &mcss.Sector, &mcss.EPS, &mcss.PE, &mcss.IndustryPE, &mcss.MarketCap, &mcss.BookValue, &mcss.Dividend, &mcss.PB, &mcss.PC, &mcss.FaceValue, &mcss.DivYield, &mcss.PromoterHolding, &mcss.DIIHolding, &mcss.FIIHolding, &mcss.OtherHolding)
 		if err != nil {
 			glog.Error("error: while reading security :error:%s", err.Error())
 			return nil, err
@@ -47,7 +47,7 @@ func ReadAllSecurityDetails(db util.DB) (map[string]coreStructures.MoneyControlS
 	var found bool
 
 	for rows.Next() {
-		err = rows.Scan(&symbol, &mcss.EPS, &mcss.PE, &mcss.IndustryPE, &mcss.MarketCap, &mcss.BookValue, &mcss.Dividend, &mcss.PB, &mcss.PC, &mcss.FaceValue, &mcss.DivYield, &mcss.PromoterHolding, &mcss.DIIHolding, &mcss.FIIHolding, &mcss.OtherHolding)
+		err = rows.Scan(&symbol, &mcss.Sector, &mcss.EPS, &mcss.PE, &mcss.IndustryPE, &mcss.MarketCap, &mcss.BookValue, &mcss.Dividend, &mcss.PB, &mcss.PC, &mcss.FaceValue, &mcss.DivYield, &mcss.PromoterHolding, &mcss.DIIHolding, &mcss.FIIHolding, &mcss.OtherHolding)
 		if err != nil {
 			glog.Error("error: while reading security :error:%s", err.Error())
 			return nil, err
