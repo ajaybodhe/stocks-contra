@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"fmt"
+	"github.com/ajaybodhe/stocks-contra/algo"
 	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
 	//"github.com/ajaybodhe/stocks-contra/coreStructures"
@@ -43,11 +44,14 @@ func Serve() {
 	*/
 	initDB()
 	client = &http.Client{}
+
 	/* Call to this function depends on passed argument */
-	//api.GetNSESectoralIndexLists(client, proddbhandle)
-	//api.GetNSEBroadMarketIndexLists(client, proddbhandle)
+	api.GetNSESectoralIndexLists(client, proddbhandle)
+	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
+
 	/*getNSEDeliveryPercentageData(5)*/
-	//api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+
 	//api.GetNSELiveQuote(client)
 	//mcss, err := api.GetMoneycontrolLiveQuote(client, "ACE")
 
@@ -55,5 +59,5 @@ func Serve() {
 	if err != nil {
 		fmt.Println("FetchNStoreMoneyControlData failed")
 	}
-	//api.RetriveNSESecuritiesTradeSignals()
+	algo.RetriveNSESecuritiesTradeSignals()
 }

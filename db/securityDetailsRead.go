@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
 	"github.com/ajaybodhe/stocks-contra/util"
@@ -34,8 +35,26 @@ func ReadSecurityDetails(db util.DB, securitySymbol string) (*coreStructures.Mon
 	return nil, fmt.Errorf("no data for security symbol &s", securitySymbol)
 }
 
-func ReadAllSecurityDetails(db util.DB) (map[string]coreStructures.MoneyControlSecurityStructure, error) {
-	rows, err := db.Query(allSecurityDetailsSql)
+func ReadAllSecurityDetails(db util.DB, securitySymbols []string) (map[string]coreStructures.MoneyControlSecurityStructure, error) {
+	var rows *sql.Rows
+	var err error
+
+	if len(securitySymbols) <= 0 {
+		rows, err = db.Query(allSecurityDetailsSql)
+	} else {
+		firstTime := true
+		specificSecurityDetailsSql := "select symbol, sector, eps, pe, industry_pe, market_cap, book_value, dividend, pb, pc, face_value, div_yield, promoter_holding, fii_holding, dii_holding, other_holding from MoneyControlSecurityDetails where symbol in ("
+		for _, securitySymbol := range securitySymbols {
+			if firstTime == true {
+				specificSecurityDetailsSql = specificSecurityDetailsSql + "\"" + securitySymbol + "\""
+				firstTime = false
+			} else {
+				specificSecurityDetailsSql = specificSecurityDetailsSql + ", \"" + securitySymbol + "\""
+			}
+		}
+		specificSecurityDetailsSql = specificSecurityDetailsSql + ");"
+		rows, err = db.Query(specificSecurityDetailsSql)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("fetch security symbols details err: sql error:%s\n", err.Error())
 	}

@@ -182,15 +182,6 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	file.Close()
 }
 
-func RetriveNSESecuritiesTradeSignals() {
-	// BUY SIGNAL ALGORITHM
-	/* join full bhav copy daya, close price, % delivery data */
-	/* get eps, pe, pe-industry, 52 week high low */
-	/* poll current NSE order book */
-
-	// SELL SIGNAL ALGORITHM
-}
-
 /* TBD Ajay we have the live quote here */
 func GetNSELiveQuote(client *http.Client) {
 
