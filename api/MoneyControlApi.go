@@ -17,7 +17,10 @@ import (
 
 func parseMoneyControlValue(quoteStr string, key string, charSkipCount int, valueEndChar string) (string, int) {
 
-	index := strings.Index(quoteStr, key)
+	index := 0
+	if key != "" {
+		index = strings.Index(quoteStr, key)
+	}
 	index += len(key) + charSkipCount
 
 	indexNextNewLineChar := strings.Index(quoteStr[index:], valueEndChar)
@@ -73,8 +76,26 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		}
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.HighLow52Week, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
 	value, err := strconv.ParseFloat(valueStr, util.FloatSizeBit32)
+	if err != nil {
+		glog.Errorln("Failed to parse 52 week low", err.Error())
+		mcss.Low52 = 0.0
+	} else {
+		mcss.Low52 = float32(util.ToFixed(value, 2))
+	}
+
+	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.EmptyString, util.MoneControlPromoterHoldingSkipCharCount, util.NewLineChar)
+	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
+	if err != nil {
+		glog.Errorln("Failed to parse 52 week high", err.Error())
+		mcss.High52 = 0.0
+	} else {
+		mcss.High52 = float32(util.ToFixed(value, 2))
+	}
+
+	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse market cap", err.Error())
 		mcss.MarketCap = 0.0

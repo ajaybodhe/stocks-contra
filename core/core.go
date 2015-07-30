@@ -59,5 +59,5 @@ func Serve() {
 	if err != nil {
 		fmt.Println("FetchNStoreMoneyControlData failed")
 	}
-	algo.RetriveNSESecuritiesTradeSignals()
+	algo.RetriveNSESecuritiesTradeSignals(proddbhandle)
 }

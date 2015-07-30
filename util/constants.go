@@ -19,7 +19,8 @@ const (
 	NSEDeliveryPercentageDataLink = "http://www.nseindia.com/archives/equities/mto/MTO_%02d%02d%04d.DAT"
 	NSESecuritiesFullBhavDataLink = "http://www.nseindia.com/products/content/sec_bhavdata_full.csv"
 	CreateTableQueryNSESFBD       = "CREATE TABLE IF NOT EXISTS `NSESecuritiesFullBhavData` ( `symbol` varchar (200), `security_type` varchar(10), `date` Date, `prev_close` DOUBLE, `open_price` DOUBLE, `high_price` DOUBLE,`low_price` DOUBLE, `last_price` DOUBLE, `close_price` DOUBLE, `avg_price` DOUBLE, `ttl_trd_qnty` INTEGER, `turnover_lacs` DOUBLE, `no_of_trades` INTEGER, `deliv_qty` INTEGER, `deliv_per` double, PRIMARY KEY (`symbol`, `date`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;"
-	DeleteTableQueryNSEFBD        = "delete from NSESecuritiesFullBhavData where date in (select date from (select min(date) date from NSESecuritiesFullBhavData) D);"
+	DeleteTableQueryNSEFBD        = "delete  from NSESecuritiesFullBhavData where date in (select minDate from (select min(date) as minDate from NSESecuritiesFullBhavData) as X) and exists (select count from (select if(count(distinct date)> 10, count(distinct date), 0) as count from NSESecuritiesFullBhavData) as Y where count > 0 );"
+	//DeleteTableQueryNSEFBD        = "delete from NSESecuritiesFullBhavData where date in (select date from (select min(date) date from NSESecuritiesFullBhavData) D);"
 
 	NSEGetLiveQuoteURL = "http://nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol=%s&illiquid=0&smeFlag=0&itpFlag=0"
 	//MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s%sp&type=1&section=mc_home"
@@ -27,6 +28,7 @@ const (
 
 	/* Moneycontrol Constants */
 	Sector              = "SECTOR:"
+	HighLow52Week       = "52 Wk Low/High"
 	EPS                 = "EPS (TTM)"
 	IndustryPE          = "INDUSTRY P/E"
 	PE                  = "P/E"
