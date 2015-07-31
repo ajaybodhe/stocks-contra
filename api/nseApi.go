@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
+	"github.com/ajaybodhe/stocks-contra/db"
 	"github.com/ajaybodhe/stocks-contra/util"
 	"github.com/golang/glog"
 	"io"
@@ -167,6 +168,12 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 		if rows != nil {
 			rows.Close()
 		}
+	}
+
+	/* update pe,pb */
+	err = db.UpdateMoneycontrolSecurityDetails(proddbhandle)
+	if err != nil {
+		fmt.Println("error UpdateMoneycontrolSecurityDetails")
 	}
 
 	/* delete the downloaded file */

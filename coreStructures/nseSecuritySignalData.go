@@ -1,6 +1,6 @@
 package coreStructures
 
-type NseLongSecurityData struct {
+type NseSecurityLongSignalData struct {
 	Symbol             string
 	PE                 float32
 	IndustryPE         float32

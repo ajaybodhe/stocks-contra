@@ -20,8 +20,10 @@ func parseMoneyControlValue(quoteStr string, key string, charSkipCount int, valu
 	index := 0
 	if key != "" {
 		index = strings.Index(quoteStr, key)
+		index += len(key) + charSkipCount
+	} else {
+		index = charSkipCount
 	}
-	index += len(key) + charSkipCount
 
 	indexNextNewLineChar := strings.Index(quoteStr[index:], valueEndChar)
 
@@ -63,6 +65,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		quoteStr = getHttpQuoteFile(quoteURL)
 	}
 
+	var index1 int
 	valueStr, index := parseMoneyControlValue(quoteStr, util.Sector, util.MoneControlSectorSkipCharCount, util.NewLineChar)
 	if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 		mcss.Sector = valueStr
@@ -76,7 +79,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		}
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.HighLow52Week, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.HighLow52Week, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+	index += index1
 	value, err := strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse 52 week low", err.Error())
@@ -85,7 +89,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.Low52 = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.EmptyString, util.MoneControlPromoterHoldingSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.EmptyString, util.MoneControlPromoterHoldingSkipCharCount+len(valueStr), util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse 52 week high", err.Error())
@@ -94,7 +99,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.High52 = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse market cap", err.Error())
@@ -103,7 +109,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.MarketCap = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.PE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.PE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse PE", err.Error())
@@ -113,6 +120,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 	}
 
 	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.BookValue, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse book value", err.Error())
@@ -121,7 +129,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.BookValue = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.Dividend, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.Dividend, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse dividend", err.Error())
@@ -130,7 +139,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.Dividend = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.IndustryPE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.IndustryPE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse industry pe", err.Error())
@@ -139,7 +149,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.IndustryPE = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.EPS, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.EPS, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse eps", err.Error())
@@ -148,7 +159,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.EPS = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.PC, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.PC, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse pc", err.Error())
@@ -157,7 +169,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PC = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.PB, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.PB, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse pb", err.Error())
@@ -166,7 +179,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PB = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.DivYield, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.DivYield, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse div yeild", err.Error())
@@ -175,7 +189,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.DivYield = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.FV, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.FV, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse face value", err.Error())
@@ -186,7 +201,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 
 	shareHoldingPatternIndex := strings.Index(quoteStr[index:], util.ShareHoldingPattern)
 
-	valueStr, index = parseMoneyControlValue(quoteStr[shareHoldingPatternIndex:], util.PromoterHolding, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[shareHoldingPatternIndex:], util.PromoterHolding, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse promoter holding", err.Error())
@@ -195,7 +211,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PromoterHolding = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.FIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.FIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse promoter holding", err.Error())
@@ -204,7 +221,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.FIIHolding = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.DIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.DIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse promoter holding", err.Error())
@@ -213,7 +231,8 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.DIIHolding = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.OtherHolding, util.MoneControlOtherHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.OtherHolding, util.MoneControlOtherHoldingSkipCharCount, util.SpaceChar)
+	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
 		glog.Errorln("Failed to parse promoter holding", err.Error())
@@ -259,6 +278,23 @@ func FetchNStoreMoneyControlData(client *http.Client, proddbhandle util.DB) erro
 	return nil
 }
 
+/*
+func FetchNStoreMoneyControlData(client *http.Client, proddbhandle util.DB) error {
+	mcssAll := make(map[string]*coreStructures.MoneyControlSecurityStructure)
+
+	mcss, err := GetMoneycontrolLiveQuote(client, "RALLIS")
+	if err != nil {
+		glog.Errorln("Failed to fetch symbol data from monecontrol", err.Error())
+	}
+	mcssAll["RALLIS"] = mcss
+
+	err = db.WriteSecurityDetails(proddbhandle, mcssAll)
+	if err != nil {
+		glog.Errorln("Failed to store symbol data from monecontrol", err.Error())
+	}
+	return nil
+}
+*/
 func httpMoneycontrolLiveQuoteURL(client *http.Client, symbol, symbolComma, symbolForwardSlah, symbolBreakTag string) (string, string, bool) {
 	//reqURL := fmt.Sprintf(util.MoneyControlURLFetcher, symbol, "%20")
 	reqURL := fmt.Sprintf(util.MoneyControlURLFetcher, symbol)

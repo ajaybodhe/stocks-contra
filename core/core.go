@@ -3,7 +3,7 @@ package core
 import (
 	"database/sql"
 	"fmt"
-	"github.com/ajaybodhe/stocks-contra/algo"
+	//"github.com/ajaybodhe/stocks-contra/algo"
 	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
 	//"github.com/ajaybodhe/stocks-contra/coreStructures"
@@ -50,7 +50,7 @@ func Serve() {
 	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
 
 	/*getNSEDeliveryPercentageData(5)*/
-	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+	//api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
 
 	//api.GetNSELiveQuote(client)
 	//mcss, err := api.GetMoneycontrolLiveQuote(client, "ACE")
@@ -59,5 +59,5 @@ func Serve() {
 	if err != nil {
 		fmt.Println("FetchNStoreMoneyControlData failed")
 	}
-	algo.RetriveNSESecuritiesTradeSignals(proddbhandle)
+	//algo.NSESecuritiesBuySignal(proddbhandle)
 }

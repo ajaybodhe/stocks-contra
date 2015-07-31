@@ -28,7 +28,23 @@ func WriteSecurityDetails(db util.DB, mcss map[string]*coreStructures.MoneyContr
 	fmt.Printf("the query is: %s", securityDetailsWriteSql)
 	_, err := db.Exec(securityDetailsWriteSql)
 	if err != nil {
-		return fmt.Errorf("fetch security symbols: sql error:%s\n", err.Error())
+		return fmt.Errorf("WriteSecurityDetails: sql error:%s\n", err.Error())
+	}
+	return nil
+}
+
+func UpdateMoneycontrolSecurityDetails(db util.DB) error {
+
+	updateClosePriceSql := "update MoneyControlSecurityDetails M, (select symbol, close_price from NSESecuritiesFullBhavData where date = (select max(date) from NSESecuritiesFullBhavData as NSE)) AS N set M.close_price = N.close_price where N.symbol=M.symbol;"
+	_, err := db.Exec(updateClosePriceSql)
+	if err != nil {
+		return fmt.Errorf("UpdateMoneycontrolSecurityDetails: sql error:%s\n", err.Error())
+	}
+
+	updateRatioSql := "update MoneyControlSecurityDetails set pe=close_price/eps, pb=close_price/book_value;"
+	_, err = db.Exec(updateRatioSql)
+	if err != nil {
+		return fmt.Errorf("UpdateMoneycontrolSecurityDetails: sql error:%s\n", err.Error())
 	}
 	return nil
 }
