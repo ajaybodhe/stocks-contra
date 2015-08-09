@@ -3,8 +3,8 @@ package core
 import (
 	"database/sql"
 	"fmt"
-	//"github.com/ajaybodhe/stocks-contra/algo"
-	"github.com/ajaybodhe/stocks-contra/api"
+	"github.com/ajaybodhe/stocks-contra/algo"
+	//"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
 	//"github.com/ajaybodhe/stocks-contra/coreStructures"
 	"github.com/ajaybodhe/stocks-contra/util"
@@ -46,8 +46,8 @@ func Serve() {
 	client = &http.Client{}
 
 	/* Call to this function depends on passed argument */
-	api.GetNSESectoralIndexLists(client, proddbhandle)
-	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
+	//api.GetNSESectoralIndexLists(client, proddbhandle)
+	//api.GetNSEBroadMarketIndexLists(client, proddbhandle)
 
 	/*getNSEDeliveryPercentageData(5)*/
 	//api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
@@ -55,9 +55,13 @@ func Serve() {
 	//api.GetNSELiveQuote(client)
 	//mcss, err := api.GetMoneycontrolLiveQuote(client, "ACE")
 
-	err := api.FetchNStoreMoneyControlData(client, proddbhandle)
+	//err := api.FetchNStoreMoneyControlData(client, proddbhandle)
+	//if err != nil {
+	//	fmt.Println("FetchNStoreMoneyControlData failed")
+	//}
+
+	err := algo.NSESecuritiesBuySignal(proddbhandle)
 	if err != nil {
-		fmt.Println("FetchNStoreMoneyControlData failed")
+		fmt.Println("NSESecuritiesBuySignal failed")
 	}
-	//algo.NSESecuritiesBuySignal(proddbhandle)
 }

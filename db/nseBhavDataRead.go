@@ -19,6 +19,7 @@ func ReadNseBhavData(db util.DB, securitySymbols []string) (map[string][]coreStr
 
 	if len(securitySymbols) <= 0 {
 		rows, err = db.Query(allSecurityNseBhavDataSql)
+		fmt.Println("Query NSE:", allSecurityNseBhavDataSql)
 	} else {
 		firstTime := true
 		specificSecurityNseBhavDataSql := "select symbol, date, prev_close, open_price, high_price, low_price, last_price, close_price, avg_price, ttl_trd_qnty, deliv_qty, deliv_per from  NSESecuritiesFullBhavData where symbol in ("
@@ -32,6 +33,7 @@ func ReadNseBhavData(db util.DB, securitySymbols []string) (map[string][]coreStr
 		}
 		specificSecurityNseBhavDataSql = specificSecurityNseBhavDataSql + ") order by symbol, date;"
 		rows, err = db.Query(specificSecurityNseBhavDataSql)
+		fmt.Println("query NSE:", specificSecurityNseBhavDataSql)
 	}
 
 	if err != nil {
@@ -59,24 +61,31 @@ func ReadNseBhavData(db util.DB, securitySymbols []string) (map[string][]coreStr
 		if symbol != symbol1 && filled == true {
 			nbrm[symbol1] = nbra
 			nbra = make([]coreStructures.NseBhavRecord, 0)
-		} else {
-			filled = true
-			symbol1 = symbol
+		} //else {
+		filled = true
+		symbol1 = symbol
 
-			if sDate != "" {
-				dDate, err = time.Parse(dateFormat, sDate)
-				if err != nil {
-					glog.Info(err)
-				}
+		if sDate != "" {
+			dDate, err = time.Parse(dateFormat, sDate)
+			if err != nil {
+				glog.Info(err)
 			}
-
-			nbr.RecordDate = dDate
-			nbra = append(nbra, nbr)
 		}
+
+		nbr.RecordDate = dDate
+		//fmt.Printf("symbol: %v, \nnbr: %v", symbol, nbr)
+		nbra = append(nbra, nbr)
+		//}
 	}
 	if filled == true {
-		nbrm[symbol] = nbra
+		nbrm[symbol1] = nbra
 	}
+
+	//for k, v := range nbrm {
+	//	for k1, v1 := range v {
+	//		fmt.Printf("\n%v	%v	%v", k, k1, v1)
+	//	}
+	//}
 
 	return nbrm, nil
 }

@@ -10,19 +10,19 @@ import (
 )
 
 func WriteNSESecuritiesBuySignal(db util.DB, nlsd map[string]coreStructures.NseSecurityLongSignalData) error {
-	sqlQ := "insert into NseSecurityLongSignalData (date, symbol, pe, industry_pe, correction, closeness52weeklow, deliv_per, sector) values "
+	sqlQ := "insert into NseSecurityLongSignalData (date, symbol, sector, pe, industry_pe, correction, closeness52weeklow, deliv_per) values "
 	firstTime := true
 	currentTime := time.Now().Local()
 	today := currentTime.Format("2006-01-02")
 	for k, v := range nlsd {
 		if firstTime {
-			sqlQ = sqlQ + fmt.Sprintf(" (%v, \"%v\", \"%v\", %v, %v, %v, %v, %v, %v)", today, k, v.Sector, v.PE, v.IndustryPE, v.Correction, v.Closeness52WeekLow, v.DelivPer)
+			sqlQ = sqlQ + fmt.Sprintf(" (\"%v\", \"%v\", \"%v\", %v, %v, %v, %v, %v)", today, k, v.Sector, v.PE, v.IndustryPE, v.Correction, v.Closeness52WeekLow, v.DelivPer)
 			firstTime = false
 		} else {
-			sqlQ = sqlQ + fmt.Sprintf(", (%v, \"%v\", \"%v\", %v, %v, %v, %v, %v, %v)", today, k, v.Sector, v.PE, v.IndustryPE, v.Correction, v.Closeness52WeekLow, v.DelivPer)
+			sqlQ = sqlQ + fmt.Sprintf(", (\"%v\", \"%v\", \"%v\", %v, %v, %v, %v, %v)", today, k, v.Sector, v.PE, v.IndustryPE, v.Correction, v.Closeness52WeekLow, v.DelivPer)
 		}
 	}
-	sqlQ = sqlQ + " ON DUPLICATE KEY UPDATE date=VALUES(date), symbol=VALUES(symbol), sector=VALUES(sector), pe=values(pe), industry_pe=VALUES(industry_pe), correction=VALUES(correction), closeness52WeekLow=VALUES(closeness52WeekLow), delivPer=VALUES(delivPer)"
+	sqlQ = sqlQ + " ON DUPLICATE KEY UPDATE date=VALUES(date), symbol=VALUES(symbol), sector=VALUES(sector), pe=values(pe), industry_pe=VALUES(industry_pe), correction=VALUES(correction), closeness52weeklow=VALUES(closeness52weeklow), deliv_per=VALUES(deliv_per);"
 	fmt.Printf("the query is: %s", sqlQ)
 	_, err := db.Exec(sqlQ)
 	if err != nil {
