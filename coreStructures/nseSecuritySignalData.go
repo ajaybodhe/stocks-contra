@@ -8,4 +8,5 @@ type NseSecurityLongSignalData struct {
 	Closeness52WeekLow float32
 	DelivPer           float32
 	Sector             string
+	Strategy           int
 }

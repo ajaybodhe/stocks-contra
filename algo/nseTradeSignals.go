@@ -5,6 +5,7 @@ import (
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
 	"github.com/ajaybodhe/stocks-contra/db"
 	"github.com/ajaybodhe/stocks-contra/util"
+	"net/http"
 )
 
 func NSESecuritiesBuySignal(dbHandle util.DB) error {
@@ -45,10 +46,12 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 		//fmt.Println("lendata", lenData)
 		correction := (max - nbda[lenData-1].ClosePrice) / max * 100
 		if max > nbda[lenData-1].ClosePrice &&
-			nbda[lenData-1].DelivPer > 50 &&
+			nbda[lenData-1].DelivPer > 60 &&
 			mcssCollection[symbol].EPS > 0.0 &&
 			mcssCollection[symbol].BookValue > 0.0 &&
-			correction > 2.5 {
+			correction > 5 &&
+			mcssCollection[symbol].PE < 100 &&
+			nbda[lenData-1].TtlTrdQnty > 1000 {
 			/* create a map of stocks which are trading lower with delivery % getting higher */
 			var eightDayAvg, fiveDayAvg, threeDayAvg float32
 			if lenData >= 3 {
@@ -62,9 +65,13 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 			}
 			/* we are assuming 5% diffrenerce in delivery percentages
 			   this logic may change */
-			if threeDayAvg > (fiveDayAvg-5) &&
-				threeDayAvg > (eightDayAvg-5) &&
-				nbda[0].DelivPer > (threeDayAvg-5) {
+			//if threeDayAvg > (fiveDayAvg-5) &&
+			//	threeDayAvg > (eightDayAvg-5) &&
+			//	nbda[0].DelivPer > (threeDayAvg-5) {
+
+			if threeDayAvg > (fiveDayAvg) &&
+				fiveDayAvg > (eightDayAvg) &&
+				nbda[0].DelivPer > (threeDayAvg) {
 
 				var highLowDiff float32
 				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
@@ -80,9 +87,55 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 					Closeness52WeekLow: (nbda[lenData-1].ClosePrice - mcssCollection[symbol].Low52) / highLowDiff * 100,
 					DelivPer:           nbda[lenData-1].DelivPer,
 					Sector:             mcssCollection[symbol].Sector,
+					Strategy:           util.StocksContra,
 				}
-
+				continue
 			}
+
+			if lenData > 5 &&
+				nbda[0].ClosePrice > nbda[1].ClosePrice &&
+				nbda[1].ClosePrice > nbda[2].ClosePrice &&
+				nbda[2].ClosePrice > nbda[3].ClosePrice &&
+				nbda[3].ClosePrice > nbda[4].ClosePrice {
+				var highLowDiff float32
+				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
+					highLowDiff = (mcssCollection[symbol].High52 - mcssCollection[symbol].Low52)
+				} else {
+					highLowDiff = 1.0
+				}
+				nlsd[symbol] = coreStructures.NseSecurityLongSignalData{
+					Symbol:             symbol,
+					PE:                 mcssCollection[symbol].PE,
+					IndustryPE:         mcssCollection[symbol].IndustryPE,
+					Correction:         correction,
+					Closeness52WeekLow: (nbda[lenData-1].ClosePrice - mcssCollection[symbol].Low52) / highLowDiff * 100,
+					DelivPer:           nbda[lenData-1].DelivPer,
+					Sector:             mcssCollection[symbol].Sector,
+					Strategy:           util.FiveConsecutiveDaysDown,
+				}
+				continue
+			}
+
+			if correction > 7 {
+				var highLowDiff float32
+				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
+					highLowDiff = (mcssCollection[symbol].High52 - mcssCollection[symbol].Low52)
+				} else {
+					highLowDiff = 1.0
+				}
+				nlsd[symbol] = coreStructures.NseSecurityLongSignalData{
+					Symbol:             symbol,
+					PE:                 mcssCollection[symbol].PE,
+					IndustryPE:         mcssCollection[symbol].IndustryPE,
+					Correction:         correction,
+					Closeness52WeekLow: (nbda[lenData-1].ClosePrice - mcssCollection[symbol].Low52) / highLowDiff * 100,
+					DelivPer:           nbda[lenData-1].DelivPer,
+					Sector:             mcssCollection[symbol].Sector,
+					Strategy:           util.MajorCorrection,
+				}
+				continue
+			}
+
 		}
 	}
 
@@ -99,9 +152,12 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 		return err
 	}
 
-	/* poll current NSE order book */
-
 	// SELL SIGNAL ALGORITHM
 
 	return nil
+}
+
+/* poll current NSE order book */
+func NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) {
+
 }

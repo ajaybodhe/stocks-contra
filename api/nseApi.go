@@ -196,8 +196,6 @@ func GetNSELiveQuote(client *http.Client) {
 	read quote for each actively traded script n read 52 week high low
 	insert or update into TradedCompanyInfo table */
 
-	/* TBD AJAY we may have to convert iso-8859-1 to utf-8 */
-
 	/* preapre the http get req */
 	symbol := "ABB"
 	reqURL := fmt.Sprintf(util.NSEGetLiveQuoteURL, symbol)

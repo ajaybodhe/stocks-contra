@@ -53,6 +53,10 @@ const (
 	CheckScriptChars                        = 3
 	MoneControlOtherHoldingSkipCharCount    = 3
 	FloatSizeBit32                          = 32
+
+	StocksContra            = 1
+	FiveConsecutiveDaysDown = 2
+	MajorCorrection         = 3
 )
 
 var NSESectoralIndexList = map[string]string{
