@@ -2,10 +2,14 @@ package algo
 
 import (
 	"fmt"
+	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
 	"github.com/ajaybodhe/stocks-contra/db"
 	"github.com/ajaybodhe/stocks-contra/util"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func NSESecuritiesBuySignal(dbHandle util.DB) error {
@@ -65,13 +69,12 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 			}
 			/* we are assuming 5% diffrenerce in delivery percentages
 			   this logic may change */
-			//if threeDayAvg > (fiveDayAvg-5) &&
-			//	threeDayAvg > (eightDayAvg-5) &&
-			//	nbda[0].DelivPer > (threeDayAvg-5) {
-
-			if threeDayAvg > (fiveDayAvg) &&
-				fiveDayAvg > (eightDayAvg) &&
-				nbda[0].DelivPer > (threeDayAvg) {
+			if threeDayAvg > (fiveDayAvg-5) &&
+				threeDayAvg > (eightDayAvg-5) &&
+				nbda[0].DelivPer > (threeDayAvg-5) {
+				//if threeDayAvg > (fiveDayAvg) &&
+				//	fiveDayAvg > (eightDayAvg) &&
+				//	nbda[0].DelivPer > (threeDayAvg) {
 
 				var highLowDiff float32
 				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
@@ -158,6 +161,51 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 }
 
 /* poll current NSE order book */
-func NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) {
+func NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) error {
+	symbolStrategyMap, err := db.RetrieveAllSymbolsNStrategy(dbHandle)
+	if err != nil {
+		return err
+	}
+	// use sync.waitgroup to wait here
+	done := make(chan bool)
+	for k, v := range symbolStrategyMap {
+		if v != util.InvalidStrategy {
+			go NseLiveQuoteAnalyser(done, client, k, v)
+			time.Sleep(10 * time.Second)
+		}
+	}
+	// sleep till 3.30 pm
+	time.Sleep(2 * time.Hour)
+	close(done)
+	return nil
+}
 
+// all of these function should run between 9.15 am to 3.30
+// yithen they should be destroyed by a signal on channel
+func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, strategy int) {
+	///fmt.Println("inside NseLiveQuoteAnalyser:", symbol)
+	for {
+		select {
+		case <-time.After(5 * time.Minute):
+			///fmt.Println("SYMBOL IS:", symbol)
+			nseLQD := api.GetNSELiveQuote(client, symbol)
+			//fmt.Printf("%d	%v	%v\n", len(nseLQD.Data), nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity)
+			if nseLQD != nil &&
+				nseLQD.Data != nil &&
+				len(nseLQD.Data) >= 1 {
+				totalBuyQty := strings.Replace(nseLQD.Data[0].TotalBuyQuantity, util.CommaChar, util.EmptyString, -1)
+				totalSellQty := strings.Replace(nseLQD.Data[0].TotalSellQuantity, util.CommaChar, util.EmptyString, -1)
+				tBQ, _ := strconv.Atoi(totalBuyQty)
+				tSQ, _ := strconv.Atoi(totalSellQty)
+				if ((tBQ - tSQ) / tSQ * 100) > 20 {
+					//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
+					fmt.Println("\nBuy symbol:", symbol, "	strategy:", strategy, "\n")
+					//fmt.Printf("\n%v\n", nseLQD)
+				}
+			}
+		case <-done:
+			//break
+			return
+		}
+	}
 }

@@ -36,6 +36,8 @@ func initDB() {
 	proddbhandle.Set(proddb)
 }
 
+/// RATIOOOOOS & NEWWWWWWS
+
 func Serve() {
 	/* TBD AJAY
 	decide upon the structure of code,
@@ -52,7 +54,6 @@ func Serve() {
 	/*getNSEDeliveryPercentageData(5)*/
 	//api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
 
-	//api.GetNSELiveQuote(client)
 	//mcss, err := api.GetMoneycontrolLiveQuote(client, "ACE")
 
 	//err := api.FetchNStoreMoneyControlData(client, proddbhandle)
@@ -60,8 +61,14 @@ func Serve() {
 	//	fmt.Println("FetchNStoreMoneyControlData failed")
 	//}
 
-	err := algo.NSESecuritiesBuySignal(proddbhandle)
+	//err := algo.NSESecuritiesBuySignal(proddbhandle)
+	//if err != nil {
+	//	fmt.Println("NSESecuritiesBuySignal failed")
+	//}
+
+	//fmt.Printf("%v", api.GetNSELiveQuote(client, "ABB"))
+	err := algo.NseOrderBookAnalyser(client, proddbhandle)
 	if err != nil {
-		fmt.Println("NSESecuritiesBuySignal failed")
+		fmt.Println("NseOrderBookAnalyser failed")
 	}
 }

@@ -190,16 +190,16 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 }
 
 /* TBD Ajay we have the live quote here */
-func GetNSELiveQuote(client *http.Client) {
+func GetNSELiveQuote(client *http.Client, symbol string) *coreStructures.NseLiveQuoteDetails {
 
 	/* get quote for each script, update the 52 week high low
 	read quote for each actively traded script n read 52 week high low
 	insert or update into TradedCompanyInfo table */
 
 	/* preapre the http get req */
-	symbol := "ABB"
+	//symbol := "ABB"
 	reqURL := fmt.Sprintf(util.NSEGetLiveQuoteURL, symbol)
-	fmt.Println("reqURL", reqURL)
+	//fmt.Println("reqURL", reqURL)
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		glog.Fatalln(err)
@@ -216,7 +216,7 @@ func GetNSELiveQuote(client *http.Client) {
 	resp, err := client.Do(req)
 	if err != nil {
 		glog.Errorln(":Result:Fail:Error:", err.Error())
-		return
+		return nil
 	}
 
 	var reader io.ReadCloser
@@ -232,11 +232,11 @@ func GetNSELiveQuote(client *http.Client) {
 	buf.ReadFrom(reader)
 	quoteDataStr := buf.String()
 
+	var nseLQD coreStructures.NseLiveQuoteDetails
 	/* TBD AJAY remove extra comma, from values */
 	strs := strings.Split(quoteDataStr, "\n")
 	for i := range strs {
 		if strings.Contains(strs[i], "futLink") {
-			var nseLQD coreStructures.NseLiveQuoteDetails
 			if err = json.Unmarshal([]byte(strs[i]), &nseLQD); err != nil {
 				panic(err)
 
@@ -247,6 +247,7 @@ func GetNSELiveQuote(client *http.Client) {
 	}
 
 	resp.Body.Close()
+	return &nseLQD
 }
 
 /*

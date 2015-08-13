@@ -54,6 +54,7 @@ const (
 	MoneControlOtherHoldingSkipCharCount    = 3
 	FloatSizeBit32                          = 32
 
+	InvalidStrategy         = 0
 	StocksContra            = 1
 	FiveConsecutiveDaysDown = 2
 	MajorCorrection         = 3
