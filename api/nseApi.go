@@ -14,7 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
+	//"time"
 )
 
 func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]string) {
@@ -103,16 +103,18 @@ func GetNSESectoralIndexLists(client *http.Client, proddbhandle util.DB) {
 }
 
 func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, deleteFromTable bool) { //noOfDays int) {
+	fmt.Println("inside GetNSESecuritiesFullBhavData")
 	/* TBD ajay fetch data for today, this one is for yesterday */
-	today := time.Now().Add(time.Duration(-86400*1) * time.Second)
-	if today.Weekday() == time.Saturday || today.Weekday() == time.Sunday {
-		return
-	}
+	//today := time.Now().Add(time.Duration(-86400*1) * time.Second)
+	//if today.Weekday() == time.Saturday || today.Weekday() == time.Sunday {
+	//	fmt.Println("return from GetNSESecuritiesFullBhavData")
+	//	return
+	//}
 
 	/* preapre the http get req */
 	req, err := http.NewRequest("GET", util.NSESecuritiesFullBhavDataLink, nil)
 	if err != nil {
-		glog.Fatalln(err)
+		fmt.Println("error is :", err)
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:28.0) Gecko/20100101 Firefox/28.0")
 	req.Header.Set("Host", "www.nseindia.com")
@@ -125,33 +127,32 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	/* get the response */
 	resp, err := client.Do(req)
 	if err != nil {
-		glog.Errorln(":Result:Fail:Error:", err.Error())
+		fmt.Println(":Result:Fail:Error:", err.Error())
 		return
 	}
 
 	/* file path where we need to store delivery data */
 	filePath := strings.Split(util.NSESecuritiesFullBhavDataLink, util.ForwardSlashChar)
 	path := util.FileDownloadPath + filePath[len(filePath)-1]
-	glog.Infoln(resp.Status)
+	fmt.Println(resp.Status)
 
 	/* fetch n store file */
 	file, err := os.Create(path)
 	if err != nil {
-		glog.Errorln(err)
+		fmt.Println(err)
 	}
 	//defer file.Close()
 	size, err := io.Copy(file, resp.Body)
 	if err != nil {
-		glog.Errorln(err)
+		fmt.Println(err)
 	}
-	glog.Infoln("%s with %v bytes downloaded", path, size)
+	fmt.Println("%s with %v bytes downloaded", path, size)
 
 	/* Load csv into mysql */
 	sqlQueryLoadFIle := fmt.Sprintf(util.LoadFileQueryNSEFBD, path, util.NSEFBDDateFormat)
 
 	rows, err := proddbhandle.Query(sqlQueryLoadFIle)
 	if err != nil {
-		glog.Errorln(err)
 		fmt.Println(err)
 	}
 	if rows != nil {
@@ -162,7 +163,6 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	if deleteFromTable == true {
 		rows, err = proddbhandle.Query(util.DeleteTableQueryNSEFBD)
 		if err != nil {
-			glog.Errorln(err)
 			fmt.Println(err)
 		}
 		if rows != nil {
@@ -181,7 +181,6 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println(err)
-		glog.Error("Error removing the file: ", path)
 	}
 
 	/* free the stuff */
@@ -238,8 +237,7 @@ func GetNSELiveQuote(client *http.Client, symbol string) *coreStructures.NseLive
 	for i := range strs {
 		if strings.Contains(strs[i], "futLink") {
 			if err = json.Unmarshal([]byte(strs[i]), &nseLQD); err != nil {
-				panic(err)
-
+				return nil
 			}
 			//fmt.Printf("%+v", nseLQD)
 			break

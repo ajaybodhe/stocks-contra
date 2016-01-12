@@ -49,8 +49,13 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 		lenData := len(nbda)
 		//fmt.Println("lendata", lenData)
 		correction := (max - nbda[lenData-1].ClosePrice) / max * 100
+		//if symbol == "SIYSIL" || symbol == "DYNAMATECH" {
+		//	fmt.Printf("\nsymbol=%v, max=%v, correction=%v, nbda[lenData-1].DelivPer=%v, nbda[lenData-1].ClosePrice=%v, nbda[lenData-2].ClosePrice=%v\n",
+		//		symbol, max, correction, nbda[lenData-1].DelivPer, nbda[lenData-1].ClosePrice, nbda[lenData-2].ClosePrice)
+		//}
+		// TBD AJAY skip if no mutual fund is holding the share
 		if max > nbda[lenData-1].ClosePrice &&
-			nbda[lenData-1].DelivPer > 60 &&
+			nbda[lenData-1].DelivPer > 50 &&
 			mcssCollection[symbol].EPS > 0.0 &&
 			mcssCollection[symbol].BookValue > 0.0 &&
 			correction > 5 &&
@@ -96,10 +101,10 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 			}
 
 			if lenData > 5 &&
-				nbda[0].ClosePrice > nbda[1].ClosePrice &&
-				nbda[1].ClosePrice > nbda[2].ClosePrice &&
-				nbda[2].ClosePrice > nbda[3].ClosePrice &&
-				nbda[3].ClosePrice > nbda[4].ClosePrice {
+				nbda[lenData-1].ClosePrice < nbda[lenData-2].ClosePrice &&
+				nbda[lenData-2].ClosePrice < nbda[lenData-3].ClosePrice &&
+				nbda[lenData-3].ClosePrice < nbda[lenData-4].ClosePrice &&
+				nbda[lenData-4].ClosePrice < nbda[lenData-5].ClosePrice {
 				var highLowDiff float32
 				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
 					highLowDiff = (mcssCollection[symbol].High52 - mcssCollection[symbol].Low52)
@@ -119,7 +124,7 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 				continue
 			}
 
-			if correction > 7 {
+			if correction > 5 {
 				var highLowDiff float32
 				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
 					highLowDiff = (mcssCollection[symbol].High52 - mcssCollection[symbol].Low52)
@@ -169,10 +174,10 @@ func NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) error {
 	// use sync.waitgroup to wait here
 	done := make(chan bool)
 	for k, v := range symbolStrategyMap {
-		if v != util.InvalidStrategy {
-			go NseLiveQuoteAnalyser(done, client, k, v)
-			time.Sleep(10 * time.Second)
-		}
+		//if v != util.InvalidStrategy {
+		go NseLiveQuoteAnalyser(done, client, k, v)
+		///time.Sleep(10 * time.Second)
+		//}
 	}
 	// sleep till 3.30 pm
 	time.Sleep(2 * time.Hour)
@@ -197,10 +202,16 @@ func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, 
 				totalSellQty := strings.Replace(nseLQD.Data[0].TotalSellQuantity, util.CommaChar, util.EmptyString, -1)
 				tBQ, _ := strconv.Atoi(totalBuyQty)
 				tSQ, _ := strconv.Atoi(totalSellQty)
-				if ((tBQ - tSQ) / tSQ * 100) > 20 {
-					//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-					fmt.Println("\nBuy symbol:", symbol, "	strategy:", strategy, "\n")
-					//fmt.Printf("\n%v\n", nseLQD)
+				if tBQ != 0 && tSQ != 0 {
+					if ((tBQ - tSQ) / tSQ * 100) > 20 {
+						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
+						fmt.Println("\nBuy symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
+						//fmt.Printf("\n%v\n", nseLQD)
+					} else if ((tSQ - tBQ) / tSQ * 100) > 50 {
+						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
+						fmt.Println("\nSell symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
+						//fmt.Printf("\n%v\n", nseLQD)
+					}
 				}
 			}
 		case <-done:

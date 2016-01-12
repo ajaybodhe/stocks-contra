@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func parseMoneyControlValue(quoteStr string, key string, charSkipCount int, valueEndChar string) (string, int) {
+func parseMoneyControlValue(quoteStr string, lenQuoteStr int, key string, charSkipCount int, valueEndChar string) (string, int) {
 
 	index := 0
 	if key != "" {
@@ -25,7 +25,7 @@ func parseMoneyControlValue(quoteStr string, key string, charSkipCount int, valu
 		index = charSkipCount
 	}
 
-	if index == -1 {
+	if index == -1 || index > lenQuoteStr {
 		return "", index
 	}
 	indexNextNewLineChar := strings.Index(quoteStr[index:], valueEndChar)
@@ -69,11 +69,15 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 	}
 
 	var index1 int
-	valueStr, index := parseMoneyControlValue(quoteStr, util.Sector, util.MoneControlSectorSkipCharCount, util.NewLineChar)
+	lenQuoteStr := len(quoteStr)
+	if quoteStr == "" || lenQuoteStr <= 0 {
+		return &mcss, nil
+	}
+	valueStr, index := parseMoneyControlValue(quoteStr, lenQuoteStr, util.Sector, util.MoneControlSectorSkipCharCount, util.NewLineChar)
 	if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 		mcss.Sector = valueStr
 	} else {
-		valueStr, index = parseMoneyControlValue(quoteStr, util.Sector, util.MoneControlAlternateSectorSkipCharCount, util.NewLineChar)
+		valueStr, index = parseMoneyControlValue(quoteStr, lenQuoteStr, util.Sector, util.MoneControlAlternateSectorSkipCharCount, util.NewLineChar)
 		if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 			mcss.Sector = valueStr
 		} else {
@@ -82,7 +86,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		}
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.HighLow52Week, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.HighLow52Week, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
 	index += index1
 	value, err := strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -92,7 +96,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.Low52 = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.EmptyString, util.MoneControlPromoterHoldingSkipCharCount+len(valueStr), util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.EmptyString, util.MoneControlPromoterHoldingSkipCharCount+len(valueStr), util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -102,7 +106,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.High52 = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.MarketCap, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -112,7 +116,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.MarketCap = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.PE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.PE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -122,7 +126,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PE = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index = parseMoneyControlValue(quoteStr[index:], util.BookValue, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.BookValue, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -132,7 +136,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.BookValue = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.Dividend, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.Dividend, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -142,7 +146,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.Dividend = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.IndustryPE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.IndustryPE, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -152,7 +156,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.IndustryPE = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.EPS, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.EPS, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -162,7 +166,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.EPS = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.PC, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.PC, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -172,7 +176,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PC = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.PB, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.PB, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -182,7 +186,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PB = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.DivYield, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.DivYield, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -192,7 +196,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.DivYield = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.FV, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.FV, util.MoneControlLiveQuoteSkipCharCount, util.NewLineChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -204,7 +208,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 
 	shareHoldingPatternIndex := strings.Index(quoteStr[index:], util.ShareHoldingPattern)
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[shareHoldingPatternIndex:], util.PromoterHolding, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[shareHoldingPatternIndex:], lenQuoteStr, util.PromoterHolding, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
 	index = index1 + shareHoldingPatternIndex
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -214,7 +218,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.PromoterHolding = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.FIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.FIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -224,7 +228,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.FIIHolding = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.DIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.DIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
@@ -234,7 +238,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.DIIHolding = float32(util.ToFixed(value, 2))
 	}
 
-	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], util.OtherHolding, util.MoneControlOtherHoldingSkipCharCount, util.SpaceChar)
+	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.OtherHolding, util.MoneControlOtherHoldingSkipCharCount, util.SpaceChar)
 	index += index1
 	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
 	if err != nil {
