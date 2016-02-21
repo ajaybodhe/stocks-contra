@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/scalingdata/gcfg"
 
-	"code.google.com/p/gcfg"
 )
 
 const (

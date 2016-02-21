@@ -41,4 +41,7 @@ If you see the "hello, world" message then your Go installation is working.
 ##go dependencies
 go get github.com/go-sql-driver/mysql
 go get golang.org/x/crypto
-
+go get github.com/golang/glog
+go get github.com/scalingdata/gcfg
+go get gopkg.in/gomail.v2
+go get github.com/PuerkitoBio/goquery
