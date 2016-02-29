@@ -1,5 +1,9 @@
 package coreStructures
 
+import (
+	"time"
+)
+
 //import(
 //	"encoding/json"
 //)
@@ -10,7 +14,7 @@ type NseCorporateAnnouncementData struct {
 	Subject string `json:"desc"`
 	AttachementLink string `json:"link"`
 	AttachmentFilePath string `json:"path"`
-	Date string `json:"date"`
+	Date time.Time `json:"date"`
 	Announcement string `json:"announcement"`
 }
 

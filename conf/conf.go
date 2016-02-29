@@ -18,18 +18,6 @@ const (
 
 /* CFillerConfig stores the global configuration structure for cache filler */
 var StocksContraConfig struct {
-	/*
-		Server struct {
-			AdminPort string
-		}
-		Redis struct {
-			ServerList  string
-			Port        int
-			ConTO       int
-			OpTO        int
-			ConPoolSize int
-		}
-	*/
 	DB struct {
 		Host     string
 		Port     int
@@ -39,13 +27,11 @@ var StocksContraConfig struct {
 		DB       string
 		ConnID   string
 	}
-	/*DB struct {
-		host     string
-		port     int
-		username string
-		password string
-		protocol string
-	}*/
+	EMAIL struct {
+		From string
+		To string
+		Password string	
+	}
 }
 
 const allowAllFilesCommand = "allowAllFiles=true"

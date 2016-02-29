@@ -4,14 +4,16 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendMail() {
+func SendMail(from, to, subject, body, attachementPath, password string) {
 	m := gomail.NewMessage()
-	m.SetHeader("From", "patharetush@gmail.com")
-	m.SetHeader("To", "patharetush@gmail.com")
-	m.SetHeader("Subject", "Hello!")
-	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
-
-	d := gomail.NewPlainDialer("smtp.gmail.com", 587, "patharetush@gmail.com", "Password")
+	m.SetHeader("From", from)
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", body)
+	if attachementPath != "" {
+		m.Attach(attachementPath)
+	}
+	d := gomail.NewPlainDialer("smtp.gmail.com", 587, from, password)
 
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)
