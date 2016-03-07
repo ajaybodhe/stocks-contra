@@ -34,6 +34,20 @@ const (
 	nseLink = "link" 
 )
 
+func interestedSubjects() func(subject string) bool {
+	interestedSubjectsMap := map[string]bool {
+		"Updates" : true,
+		"Press Release" : true,
+		"Record Date" : false,
+	}
+	return func(subject string)bool {
+		if val, ok := interestedSubjectsMap[subject]; ok {
+			return val
+		}
+		return false
+	}
+}
+
 func getISTTIme(date string ) time.Time{
 	loc, _ := time.LoadLocation("Asia/Kolkata")
     test, err := time.ParseInLocation("02-Jan-2006 15:04", date, loc)
@@ -200,6 +214,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 	limit := 20
 	stopFlag := false
 	announcements := make([]*coreStructures.NseCorporateAnnouncementData, 10)
+	check := interestedSubjects()
 	
 	for start < 80 && stopFlag == false {
 		url1 := url + "?start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit)
@@ -260,7 +275,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 			}
 			charsCount += i
 		
-			_, i = getNseCorporateAnnouncementDataValue(announcementDataStr[charsCount:], nseDescription)
+			desc, i := getNseCorporateAnnouncementDataValue(announcementDataStr[charsCount:], nseDescription)
 			if i == -1 {
 				break
 			}
@@ -281,6 +296,9 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 			//TBD AJAY fetch the actual data attchements & mail
 			fullDataURL := util.NseBaseURL + link
 			//fmt.Printf("\nFullURL = %v\n", fullDataURL)
+			if check(desc) == false {
+				continue
+			}
 			corporateAnnoucement, err := getNseFullCorporateAnnoucement(client, fullDataURL)
 			if err == nil {
 				corporateAnnoucement.Company = company
