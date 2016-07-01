@@ -1,6 +1,8 @@
 package db
 
 import (
+	"strings"
+	"time"
 	"database/sql"
 	//"database/sql/driver"
 	"fmt"
@@ -33,5 +35,9 @@ func ReadMaxDateRecordNseCorporateAnnouncement(db util.DB) (*coreStructures.NseC
 			return nil, err
 		}
 	}
+	tp, err := time.Parse("2006-01-02 15:04:05 -0700 IST", 
+			strings.Replace(nseCorporateAnnouncementData.Date.String(), "+0000 UTC", "+0530 IST", -1))
+	nseCorporateAnnouncementData.Date = tp
+	fmt.Printf("\ndata %v, err=%v", nseCorporateAnnouncementData.Date, err)
 	return &nseCorporateAnnouncementData, nil
 }

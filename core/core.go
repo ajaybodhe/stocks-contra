@@ -6,12 +6,13 @@ import (
 	//"github.com/ajaybodhe/stocks-contra/algo"
 	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
-	//"github.com/ajaybodhe/stocks-contra/coreStructures"
+	
 	"github.com/ajaybodhe/stocks-contra/util"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang/glog"
 	"net/http"
 	"os"
+	"crypto/tls"
 	/*
 		"golang.org/x/text/encoding"
 		"golang.org/x/text/encoding/charmap"
@@ -24,7 +25,8 @@ var testdbhandle util.DB
 
 func initDB() {
 	//initialize production db handle
-	proddb, err := sql.Open("mysql", conf.StocksContraConfig.DB.ConnID)
+	fmt.Printf("\nconf.StocksContraConfig.DB.ConnID=%v",conf.StocksContraConfig.DB.ConnID)
+	proddb, err := sql.Open("mysql", conf.StocksContraConfig.DB.ConnID + "&parseTime=True")
 	if err != nil {
 		glog.Errorln("error: connecting to mysql:", conf.StocksContraConfig.DB.ConnID, ":error:", err.Error())
 		return
@@ -57,7 +59,10 @@ func Serve() {
 	*/
 	var err error
 	initDB()
-	client = &http.Client{}
+	tr := &http.Transport{
+        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+    }
+	client := &http.Client{Transport: tr}
 
 	/* Call to this function depends on passed argument */
 //	api.GetNSESectoralIndexLists(client, proddbhandle)
@@ -86,4 +91,8 @@ func Serve() {
 	if err != nil {
 		fmt.Println("GetNseCorporateAnnouncements failed")
 	}
+//	err = api.GetBseCorporateAnnouncements(client, proddbhandle, util.BSECorporateAnnounceMentLink)
+//	if err != nil {
+//		fmt.Println("GetBseCorporateAnnouncements failed")
+//	}
 }

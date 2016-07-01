@@ -12,6 +12,7 @@ import (
 	"github.com/ajaybodhe/stocks-contra/util"
 	"github.com/golang/glog"
 	//"errors"
+//	"crypto/tls"
 	"net/http"
 	//"encoding/json"
 	//"io/ioutil"
@@ -39,6 +40,7 @@ func interestedSubjects() func(subject string) bool {
 		"Updates" : true,
 		"Press Release" : true,
 		"Record Date" : false,
+		"Financial Result Updates": true,
 	}
 	return func(subject string)bool {
 		if val, ok := interestedSubjectsMap[subject]; ok {
@@ -210,31 +212,43 @@ func getNseCorporateAnnouncementDataValue(announcementDataStr string, substring 
 }
 
 func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url string) error{
+//func GetNseCorporateAnnouncements( proddbhandle util.DB, url string) error{
+//	tr := &http.Transport{
+//        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+//    }
+//	client := &http.Client{Transport: tr}
 	start := 0
 	limit := 20
 	stopFlag := false
-	announcements := make([]*coreStructures.NseCorporateAnnouncementData, 10)
+	announcements := make([]*coreStructures.NseCorporateAnnouncementData, 0)
 	check := interestedSubjects()
+	
+	lastAnnouncement, err := db.ReadMaxDateRecordNseCorporateAnnouncement(proddbhandle)
+	if err != nil {
+		lastAnnouncement = nil
+	}
 	
 	for start < 80 && stopFlag == false {
 		url1 := url + "?start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit)
 		fmt.Printf("\nurl=%v\n", url1)
 		req, err := http.NewRequest("GET", url1, nil)
 		if err != nil {
-			glog.Fatalln(err)
+			fmt.Println(err)
 		}
 
-		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:28.0) Gecko/20100101 Firefox/28.0")
+		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) Gecko/20100101 Firefox/4")
 		req.Header.Set("Host", "www.nseindia.com")
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 		req.Header.Set("Cache-Control", "no-cache")
+		req.Header.Set("Connection", "keep-alive")
 		req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-		req.Header.Set("Accept-Encoding", "gzip, deflate")
+		req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Set("If-Modified-Since","Sun, 29 May 2016 07:20:07 GMT")
 		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 		resp, err := client.Do(req)
 		if err != nil {
-			glog.Errorln(":Result:Fail:Error:", err.Error())
+			fmt.Println(":Result:Fail:Error:", err.Error())
 		}
+		fmt.Printf("\nrespionse=%v", resp.Body)
 		defer resp.Body.Close()
 	
 		var reader io.ReadCloser
@@ -257,7 +271,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 			}
 		}
 		announcementDataStr = announcementDataStr[count:]
-		//fmt.Printf("\nResponse Status = %v\n\nResponse Body = %+v\n", resp.Status, announcementDataStr)
+		fmt.Printf("\nResponse Status = %v\n\nResponse Body = %+v\n", resp.Status, announcementDataStr)
 		
 		//var announcements coreStructures.NseCorporateAnnouncement 
 		charsCount := 0
@@ -295,7 +309,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 			
 			//TBD AJAY fetch the actual data attchements & mail
 			fullDataURL := util.NseBaseURL + link
-			//fmt.Printf("\nFullURL = %v\n", fullDataURL)
+			fmt.Printf("\nFullURL = %v\n", fullDataURL)
 			if check(desc) == false {
 				continue
 			}
@@ -312,10 +326,15 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 						conf.StocksContraConfig.EMAIL.Password)
 			}
 			
-			lastAnnouncement, err := db.ReadMaxDateRecordNseCorporateAnnouncement(proddbhandle)
-			if corporateAnnoucement.Date.Before(lastAnnouncement.Date) == true {
+			
+			fmt.Printf("\nlastAnnouncement:%v", lastAnnouncement.Date)
+			fmt.Printf("\ncorpAnnouncement:%v", corporateAnnoucement.Date)
+			if lastAnnouncement != nil && corporateAnnoucement != nil && corporateAnnoucement.Date.Before(lastAnnouncement.Date) == true {
 				stopFlag = true
-			} else {
+			} else if corporateAnnoucement != nil  {
+//				fmt.Printf("\norporateAnnoucement.Announcement= %v",corporateAnnoucement.Announcement)
+				corporateAnnoucement.Announcement = strings.Replace(corporateAnnoucement.Announcement, "\"", "\\\"", -1)
+//				fmt.Printf("\norporateAnnoucement.Announcement= %v",corporateAnnoucement.Announcement)
 				announcements = append(announcements, corporateAnnoucement)
 			} 
 			
@@ -334,6 +353,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 		}
 		start += limit
 	}
+//	fmt.Printf("\nannoucements:%v, len=%v", announcements, len(announcements))
 	_ = db.WriteNseCorporateAnnouncements(proddbhandle, announcements)
 	return nil
  }

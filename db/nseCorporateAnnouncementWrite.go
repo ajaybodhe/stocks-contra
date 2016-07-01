@@ -28,9 +28,9 @@ func WriteNseCorporateAnnouncements(db util.DB, announcements []*coreStructures.
 	for _, announcement := range announcements {
 		if firstTime {
 			firstTime = false
-			nseCorporateAnnouncementWriteQuery += fmt.Sprintf("(\"%v\", \"%v\", %v, \"%v\", \"%v\")", announcement.Symbol, announcement.Company, announcement.Date, announcement.Subject, announcement.Announcement)
+			nseCorporateAnnouncementWriteQuery += fmt.Sprintf("(\"%v\", \"%v\", \"%v\", \"%v\", \"%v\")", announcement.Symbol, announcement.Company, announcement.Date, announcement.Subject, announcement.Announcement)
 		} else {
-			nseCorporateAnnouncementWriteQuery += fmt.Sprintf(",(\"%v\", \"%v\", %v, \"%v\", \"%v\")", announcement.Symbol, announcement.Company, announcement.Date, announcement.Subject, announcement.Announcement)
+			nseCorporateAnnouncementWriteQuery += fmt.Sprintf(",(\"%v\", \"%v\",\"%v\", \"%v\", \"%v\")", announcement.Symbol, announcement.Company, announcement.Date, announcement.Subject, announcement.Announcement)
 		}
 	}
 	fmt.Printf("the query is: %s", nseCorporateAnnouncementWriteQuery)
