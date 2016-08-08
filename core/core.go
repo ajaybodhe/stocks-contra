@@ -1,9 +1,10 @@
 package core
 
 import (
+	"time"
 	"database/sql"
 	"fmt"
-	//"github.com/ajaybodhe/stocks-contra/algo"
+//	"github.com/ajaybodhe/stocks-contra/algo"
 	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
 	
@@ -68,15 +69,20 @@ func Serve() {
 //	api.GetNSESectoralIndexLists(client, proddbhandle)
 //	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
 
+	/*getNSEDeliveryPercentageData(5)*/
+//	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+
+//	err := algo.NSESecuritiesBuySignal(proddbhandle)
+//	if err != nil {
+//		fmt.Println("NSESecuritiesBuySignal failed")
+//	}
+
 //	err = api.FetchNStoreMoneyControlData(client, proddbhandle)
 //	if err != nil {
 //		fmt.Println("FetchNStoreMoneyControlData failed")
 //	}
 
-	/*getNSEDeliveryPercentageData(5)*/
-//	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
-
-//	err = algo.NSESecuritiesBuySignal(proddbhandle)
+//	err := algo.NSESecuritiesBuySignal(proddbhandle)
 //	if err != nil {
 //		fmt.Println("NSESecuritiesBuySignal failed")
 //	}
@@ -87,11 +93,14 @@ func Serve() {
 //		fmt.Println("NseOrderBookAnalyser failed")
 //	}
 	
-	err = api.GetNseCorporateAnnouncements(client, proddbhandle, util.NSECorporateAnnounceMentLink)
-	if err != nil {
-		fmt.Println("GetNseCorporateAnnouncements failed")
+	for {
+		err = api.GetNseCorporateAnnouncements(client, proddbhandle, util.NSECorporateAnnounceMentLink)
+		if err != nil {
+			fmt.Println("GetNseCorporateAnnouncements failed")
+		}
+		time.Sleep(time.Second * 10)
 	}
-//	err = api.GetBseCorporateAnnouncements(client, proddbhandle, util.BSECorporateAnnounceMentLink)
+//	err := api.GetBseCorporateAnnouncements(client, proddbhandle, util.BSECorporateAnnounceMentLink)
 //	if err != nil {
 //		fmt.Println("GetBseCorporateAnnouncements failed")
 //	}

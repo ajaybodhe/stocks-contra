@@ -228,7 +228,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 		lastAnnouncement = nil
 	}
 	
-	for start < 80 && stopFlag == false {
+	for start < 30 && stopFlag == false {
 		url1 := url + "?start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit)
 		fmt.Printf("\nurl=%v\n", url1)
 		req, err := http.NewRequest("GET", url1, nil)
@@ -242,7 +242,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 		req.Header.Set("Connection", "keep-alive")
 		req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 		req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-		req.Header.Set("If-Modified-Since","Sun, 29 May 2016 07:20:07 GMT")
+//		req.Header.Set("If-Modified-Since","Sun, 29 May 2016 07:20:07 GMT")
 		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 		resp, err := client.Do(req)
 		if err != nil {

@@ -35,6 +35,7 @@ func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]
 		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
 		resp, err := client.Do(req)
+		fmt.Printf("\nerr=%v",err)
 		if err != nil {
 			glog.Errorln(":Result:Fail:Error:", err.Error())
 			continue

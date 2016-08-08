@@ -49,7 +49,7 @@ func GetBseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 	check := interestedBseSubjects()
 	
 	for start < 21 && stopFlag == false {
-		url1 := url + "?curpg=" + strconv.Itoa(start) + "&annflag=1&dt=&dur=D&dtto=&cat=&scrip=&anntype=A"
+		url1 := url + "?curpg=" + strconv.Itoa(start) + "&annflag=1&dt=&dur=D&dtto=&cat=&scrip=&anntype=C"
 		fmt.Printf("\nurl=%v\n", url1)
 		req, err := http.NewRequest("GET", url1, nil)
 		if err != nil {
@@ -95,7 +95,7 @@ func GetBseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 	
 		var date string
 		var subject string
-		var annoucement string
+		var announcement string
 		var attachmentLink string
 		var description string
 	
@@ -109,7 +109,7 @@ func GetBseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 							fmt.Printf("description=%s\n", s.Text())
 							annoucementCount = 1
 						} else if annoucementCount == 1{
-							annoucement = s.Text()
+							announcement = s.Text()
 							fmt.Printf("announcement=%s\n", s.Text())
 							annoucementCount = 2
 						} else if annoucementCount == 2{
@@ -121,7 +121,7 @@ func GetBseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 					} else if columnIdx1 == 1 {
 						subject = s.Text()
 						if check(subject) == false {
-							
+							return
 						}
 						fmt.Printf("subject=%s\n", s.Text())
 					} else if columnIdx1 == 2 {
@@ -138,6 +138,8 @@ func GetBseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 			})
 		})
 		//fmt.Printf("\nResponse Status = %v\n\nResponse Body = %+v\n", resp.Status, string(htmlData))
+		fmt.Printf("descriptionOutside=%s\n", description)
+		fmt.Printf("announcementOutside=%s\n", announcement)
 		
 		start += limit
 	}
