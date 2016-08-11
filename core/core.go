@@ -1,10 +1,10 @@
 package core
 
 import (
-	"time"
+//	"time"
 	"database/sql"
 	"fmt"
-//	"github.com/ajaybodhe/stocks-contra/algo"
+	"github.com/ajaybodhe/stocks-contra/algo"
 	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
 	
@@ -50,7 +50,12 @@ func initDB() {
 // future market/ oi at put call option
 // simple moving averages, other ratios,
 // bulk deals, block deals, short selling
+
 // instead of 3/5/8 day avg calculate when the delivery is going high
+// no stock by strat 1
+// way to minimize output of algo, bloom or compare with NSE first 1k stocks
+// concurrent news reading
+// sentiment analysis of the news
 
 func Serve() {
 	/* TBD AJAY
@@ -66,26 +71,21 @@ func Serve() {
 	client := &http.Client{Transport: tr}
 
 	/* Call to this function depends on passed argument */
-//	api.GetNSESectoralIndexLists(client, proddbhandle)
-//	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
+	api.GetNSESectoralIndexLists(client, proddbhandle)
+	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
 
 	/*getNSEDeliveryPercentageData(5)*/
-//	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
 
-//	err := algo.NSESecuritiesBuySignal(proddbhandle)
-//	if err != nil {
-//		fmt.Println("NSESecuritiesBuySignal failed")
-//	}
+	err = api.FetchNStoreMoneyControlData(client, proddbhandle)
+	if err != nil {
+		fmt.Println("FetchNStoreMoneyControlData failed")
+	}
 
-//	err = api.FetchNStoreMoneyControlData(client, proddbhandle)
-//	if err != nil {
-//		fmt.Println("FetchNStoreMoneyControlData failed")
-//	}
-
-//	err := algo.NSESecuritiesBuySignal(proddbhandle)
-//	if err != nil {
-//		fmt.Println("NSESecuritiesBuySignal failed")
-//	}
+	err = algo.NSESecuritiesBuySignal(proddbhandle)
+	if err != nil {
+		fmt.Println("NSESecuritiesBuySignal failed")
+	}
 
 	//fmt.Printf("%v", api.GetNSELiveQuote(client, "ABB"))
 //	err = algo.NseOrderBookAnalyser(client, proddbhandle)
@@ -93,13 +93,13 @@ func Serve() {
 //		fmt.Println("NseOrderBookAnalyser failed")
 //	}
 	
-	for {
-		err = api.GetNseCorporateAnnouncements(client, proddbhandle, util.NSECorporateAnnounceMentLink)
-		if err != nil {
-			fmt.Println("GetNseCorporateAnnouncements failed")
-		}
-		time.Sleep(time.Second * 10)
-	}
+//	for {
+//		err = api.GetNseCorporateAnnouncements(client, proddbhandle, util.NSECorporateAnnounceMentLink)
+//		if err != nil {
+//			fmt.Println("GetNseCorporateAnnouncements failed")
+//		}
+//		time.Sleep(time.Second * 10)
+//	}
 //	err := api.GetBseCorporateAnnouncements(client, proddbhandle, util.BSECorporateAnnounceMentLink)
 //	if err != nil {
 //		fmt.Println("GetBseCorporateAnnouncements failed")

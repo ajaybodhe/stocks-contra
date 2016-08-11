@@ -79,12 +79,18 @@ var NSESectoralIndexList = map[string]string{
 }
 
 var NSEBroadMarketIndexList = map[string]string{
-	"CNX_NIFTY":        "https://www.nseindia.com/content/indices/ind_nifty50list.csv",
-	"CNX_NIFTY_JUNIOR": "https://www.nseindia.com/content/indices/ind_niftynext50list.csv",
-	"CNX_100":          "https://www.nseindia.com/content/indices/ind_nifty100list.csv",
-	"CNX_200":          "https://www.nseindia.com/content/indices/ind_nifty200list.csv",
-	"CNX_500":          "https://www.nseindia.com/content/indices/ind_nifty500list.csv",
+	"NIFTY_50":        "https://www.nseindia.com/content/indices/ind_nifty50list.csv",
+	"NIFTY_NEXT_50":   "https://www.nseindia.com/content/indices/ind_niftynext50list.csv",
+	"NIFTY_100":          "https://www.nseindia.com/content/indices/ind_nifty100list.csv",
+	"NIFTY_200":          "https://www.nseindia.com/content/indices/ind_nifty200list.csv",
+	"NIFTY_500":          "https://www.nseindia.com/content/indices/ind_nifty500list.csv",
 	"NIFTY_MIDCAP_50":  "https://www.nseindia.com/content/indices/ind_niftymidcap50list.csv",
-	"CNX_MIDCAP":       "https://www.nseindia.com/content/indices/ind_niftyfreefloatMidcap100list.csv",
-	"CNX_SMALLCAP":     "https://www.nseindia.com/content/indices/ind_niftysmallcap250list.csv",
-}
+	"NIFTY_MIDCAP_FULL_100" : "https://www.nseindia.com/content/indices/ind_niftyfullmidcap100list.csv",
+	"NIFTY_MIDCAP_100":  "https://www.nseindia.com/content/indices/ind_niftyfullmidcap100list.csv",
+	"NIFTY_FREE_FLOAT_MIDCAP_100" : "https://www.nseindia.com/content/indices/ind_niftyfreefloatMidcap100list.csv",
+	"NIFTY_SMALLCAP_250" : "https://www.nseindia.com/content/indices/ind_niftysmallcap250list.csv",
+	"NIFTY_SMALLCAP_50" : "https://www.nseindia.com/content/indices/ind_niftysmallcap50list.csv",
+	"NIFTY_SMALLCAP_FULL_100" : "https://www.nseindia.com/content/indices/ind_niftyfullsmallcap100list.csv",
+	"NIFTY_FREE_FLOAT_SMALLCAP_100" : "https://www.nseindia.com/content/indices/ind_niftyfreefloatMidcap100list.csv",
+	"NIFTY_MIDSMALLCAP_400" : "https://www.nseindia.com/content/indices/ind_niftymidsmallcap400list.csv",
+	}

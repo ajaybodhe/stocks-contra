@@ -26,7 +26,7 @@ func parseMoneyControlValue(quoteStr string, lenQuoteStr int, key string, charSk
 	}
 
 	if index == -1 || index > lenQuoteStr {
-		return "", index
+		return "", -1
 	}
 	indexNextNewLineChar := strings.Index(quoteStr[index:], valueEndChar)
 
@@ -74,11 +74,11 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		return &mcss, nil
 	}
 	valueStr, index := parseMoneyControlValue(quoteStr, lenQuoteStr, util.Sector, util.MoneControlSectorSkipCharCount, util.NewLineChar)
-	if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
+	if (index != -1) && (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 		mcss.Sector = valueStr
 	} else {
 		valueStr, index = parseMoneyControlValue(quoteStr, lenQuoteStr, util.Sector, util.MoneControlAlternateSectorSkipCharCount, util.NewLineChar)
-		if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
+		if (index != -1) && (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 			mcss.Sector = valueStr
 		} else {
 			glog.Errorln("Failed to parse sector")
