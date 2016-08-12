@@ -42,24 +42,31 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 		//fmt.Println("symbol:", symbol)
 		//fmt.Println("nbda:", nbda)
 		var max float32
-		//var maxInd int
 		max = -1.0
-		//maxInd = -1
-
-		for _, nbr := range nbda {
-			if max < nbr.ClosePrice {
-				max = nbr.ClosePrice
+		
+		lenData := len(nbda)
+		
+		var rangeOver int
+		if lenData >= 15 {
+			rangeOver = 15
+		} else if lenData >= 10 {
+			rangeOver = 10
+		} else {
+			continue
+		}
+		for i:=1; i<=rangeOver; i++ {
+			if max < nbda[lenData - i].ClosePrice {
+				max = nbda[lenData - i].ClosePrice
 				//maxInd = i
 			}
 		}
-		lenData := len(nbda)
-		//fmt.Println("lendata", lenData)
+		
 		correction := (max - nbda[lenData-1].ClosePrice) / max * 100
 		//if symbol == "SIYSIL" || symbol == "DYNAMATECH" {
 		//	fmt.Printf("\nsymbol=%v, max=%v, correction=%v, nbda[lenData-1].DelivPer=%v, nbda[lenData-1].ClosePrice=%v, nbda[lenData-2].ClosePrice=%v\n",
 		//		symbol, max, correction, nbda[lenData-1].DelivPer, nbda[lenData-1].ClosePrice, nbda[lenData-2].ClosePrice)
 		//}
-		// TBD AJAY skip if no mutual fund is holding the share
+		
 		if max > nbda[lenData-1].ClosePrice &&
 			nbda[lenData-1].DelivPer > 50 &&
 			mcssCollection[symbol].EPS > 0.0 &&
@@ -67,32 +74,22 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 			correction > 5 &&
 			mcssCollection[symbol].PE < 100 &&
 			nbda[lenData-1].TtlTrdQnty > 1000 {
-			/* create a map of stocks which are trading lower with delivery % getting higher */
-			var eightDayAvg, fiveDayAvg, threeDayAvg float32
-			if lenData >= 3 {
-				threeDayAvg = (nbda[lenData-1].DelivPer + nbda[lenData-2].DelivPer + nbda[lenData-3].DelivPer) / 3
-			}
-			if lenData >= 5 {
-				fiveDayAvg = ((threeDayAvg * 3) + nbda[lenData-4].DelivPer + nbda[lenData-5].DelivPer) / 5
-			}
-			if lenData >= 8 {
-				eightDayAvg = ((fiveDayAvg * 5) + nbda[lenData-6].DelivPer + nbda[lenData-7].DelivPer + nbda[lenData-8].DelivPer) / 5
-			}
+			
 			/* we are assuming 5% diffrenerce in delivery percentages
 			   this logic may change */
-			if threeDayAvg > (fiveDayAvg-5) &&
-				threeDayAvg > (eightDayAvg-5) &&
-				nbda[0].DelivPer > (threeDayAvg-5) {
-				//if threeDayAvg > (fiveDayAvg) &&
-				//	fiveDayAvg > (eightDayAvg) &&
-				//	nbda[0].DelivPer > (threeDayAvg) {
+			if nbda[lenData-1].DelivPer >= (nbda[lenData-2].DelivPer - 5.0) && 
+			   nbda[lenData-2].DelivPer >= (nbda[lenData-3].DelivPer - 5.0) &&
+			   nbda[lenData-3].DelivPer >= (nbda[lenData-4].DelivPer - 5.0) &&
+			   nbda[lenData-4].DelivPer >= (nbda[lenData-5].DelivPer - 5.0) {
 
 				var highLowDiff float32
+				
 				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
 					highLowDiff = (mcssCollection[symbol].High52 - mcssCollection[symbol].Low52)
 				} else {
 					highLowDiff = 1.0
 				}
+				
 				nlsd[symbol] = coreStructures.NseSecurityLongSignalData{
 					Symbol:             symbol,
 					PE:                 mcssCollection[symbol].PE,
@@ -106,17 +103,19 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 				continue
 			}
 
-			if lenData > 5 &&
-				nbda[lenData-1].ClosePrice < nbda[lenData-2].ClosePrice &&
+			if  nbda[lenData-1].ClosePrice < nbda[lenData-2].ClosePrice &&
 				nbda[lenData-2].ClosePrice < nbda[lenData-3].ClosePrice &&
 				nbda[lenData-3].ClosePrice < nbda[lenData-4].ClosePrice &&
 				nbda[lenData-4].ClosePrice < nbda[lenData-5].ClosePrice {
+					
 				var highLowDiff float32
+				
 				if mcssCollection[symbol].High52 > mcssCollection[symbol].Low52 {
 					highLowDiff = (mcssCollection[symbol].High52 - mcssCollection[symbol].Low52)
 				} else {
 					highLowDiff = 1.0
 				}
+				
 				nlsd[symbol] = coreStructures.NseSecurityLongSignalData{
 					Symbol:             symbol,
 					PE:                 mcssCollection[symbol].PE,
