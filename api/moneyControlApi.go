@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"bytes"
 	"compress/gzip"
 	"fmt"
@@ -52,7 +53,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 
 	quoteURL, quoteStr, fileDownloaded := getMoneycontrolLiveQuoteURL(client, symbol)
 	if quoteURL == "" {
-		return &mcss, nil
+		return &mcss, errors.New("no data found on moneycontrol")
 	}
 	/*
 		//args := fmt.Sprintf("-dump >/tmp/quote", quoteURL)
@@ -71,14 +72,17 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 	var index1 int
 	lenQuoteStr := len(quoteStr)
 	if quoteStr == "" || lenQuoteStr <= 0 {
-		return &mcss, nil
+		return &mcss, errors.New("zero length data fetched from moneycontrol")
 	}
 	valueStr, index := parseMoneyControlValue(quoteStr, lenQuoteStr, util.Sector, util.MoneControlSectorSkipCharCount, util.NewLineChar)
-	if (index != -1) && (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
+	if index == -1{
+		return &mcss, errors.New("can not determine sector")
+	}
+	if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 		mcss.Sector = valueStr
 	} else {
 		valueStr, index = parseMoneyControlValue(quoteStr, lenQuoteStr, util.Sector, util.MoneControlAlternateSectorSkipCharCount, util.NewLineChar)
-		if (index != -1) && (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
+		if (valueStr[0] >= 'a' && valueStr[0] <= 'z') || (valueStr[0] >= 'A' && valueStr[0] <= 'Z') {
 			mcss.Sector = valueStr
 		} else {
 			glog.Errorln("Failed to parse sector")
