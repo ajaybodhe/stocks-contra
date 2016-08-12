@@ -27,12 +27,18 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 		fmt.Println("error executing ReadAllSecurityDetails", err)
 		return err
 	}
-
+	bloomFilter,_ := db.GetInterestedSymbolsBloom(dbHandle)
 	/* map of all securities corrected */
 	nlsd := make(map[string]coreStructures.NseSecurityLongSignalData)
 	/* check the stocks which have corrected for last few days n delivery % has gone up
 	or either its above some comfort level */
 	for symbol, nbda := range nbdm {
+		
+		if bloomFilter != nil {
+			if bloomFilter.Test([]byte(symbol)) == false {
+				continue
+			}	
+		}
 		//fmt.Println("symbol:", symbol)
 		//fmt.Println("nbda:", nbda)
 		var max float32

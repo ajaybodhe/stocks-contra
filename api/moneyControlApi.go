@@ -21,7 +21,9 @@ func parseMoneyControlValue(quoteStr string, lenQuoteStr int, key string, charSk
 	index := 0
 	if key != "" {
 		index = strings.Index(quoteStr, key)
-		index += len(key) + charSkipCount
+		if index != -1 {
+			index += len(key) + charSkipCount
+		}
 	} else {
 		index = charSkipCount
 	}
@@ -31,9 +33,14 @@ func parseMoneyControlValue(quoteStr string, lenQuoteStr int, key string, charSk
 	}
 	indexNextNewLineChar := strings.Index(quoteStr[index:], valueEndChar)
 
-	valueStr := strings.Replace(quoteStr[index:index+indexNextNewLineChar], util.CommaChar, util.EmptyString, -1)
-	valueStr = strings.Replace(valueStr, util.PercentageChar, util.EmptyString, -1)
-	return valueStr, index
+	if indexNextNewLineChar != -1 {
+		valueStr := strings.Replace(quoteStr[index:index+indexNextNewLineChar], util.CommaChar, util.EmptyString, -1)
+		valueStr = strings.Replace(valueStr, util.PercentageChar, util.EmptyString, -1)
+		return valueStr, index
+	} else {
+		return "", -1
+	}
+	
 }
 
 func getHttpQuoteFile(quoteURL string) string {
@@ -211,15 +218,16 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 	}
 
 	shareHoldingPatternIndex := strings.Index(quoteStr[index:], util.ShareHoldingPattern)
-
-	valueStr, index1 = parseMoneyControlValue(quoteStr[shareHoldingPatternIndex:], lenQuoteStr, util.PromoterHolding, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
-	index = index1 + shareHoldingPatternIndex
-	value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
-	if err != nil {
-		glog.Errorln("Failed to parse promoter holding", err.Error())
-		mcss.PromoterHolding = 0.0
-	} else {
-		mcss.PromoterHolding = float32(util.ToFixed(value, 2))
+	if shareHoldingPatternIndex != -1 {
+		valueStr, index1 = parseMoneyControlValue(quoteStr[shareHoldingPatternIndex:], lenQuoteStr, util.PromoterHolding, util.MoneControlPromoterHoldingSkipCharCount, util.SpaceChar)
+		index = index1 + shareHoldingPatternIndex
+		value, err = strconv.ParseFloat(valueStr, util.FloatSizeBit32)
+		if err != nil {
+			glog.Errorln("Failed to parse promoter holding", err.Error())
+			mcss.PromoterHolding = 0.0
+		} else {
+			mcss.PromoterHolding = float32(util.ToFixed(value, 2))
+		}
 	}
 
 	valueStr, index1 = parseMoneyControlValue(quoteStr[index:], lenQuoteStr, util.FIIHolding, util.MoneControlFIIHoldingSkipCharCount, util.SpaceChar)

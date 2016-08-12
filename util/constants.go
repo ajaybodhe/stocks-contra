@@ -61,6 +61,11 @@ const (
 	StocksContra            = 1
 	FiveConsecutiveDaysDown = 2
 	MajorCorrection         = 3
+	
+	BloomBits = 71888
+	BloomHashCount = 10
+	BloomStockEntries = 5000
+	BloomFPError = 0.001
 )
 
 var NSESectoralIndexList = map[string]string{
