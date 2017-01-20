@@ -17,7 +17,7 @@ import (
 	//"time"
 )
 
-func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]string) {
+func getNSEIndexList(client *http.Client, list map[string]string) {
 	for key, value := range list {
 		glog.Infoln(key, value)
 
@@ -59,7 +59,7 @@ func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]
 		glog.Infoln("%s with %v bytes downloaded", path, size)
 
 		sqlQueryTruncateTable := fmt.Sprintf(util.TruncateTableQuery, key)
-		rows, err := proddbhandle.Query(sqlQueryTruncateTable)
+		rows, err := db.RandomQuery(sqlQueryTruncateTable)
 		if err != nil {
 			glog.Errorln(err)
 		}
@@ -68,7 +68,7 @@ func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]
 		}
 
 		sqlQueryLoadFIle := fmt.Sprintf(util.LoadFileQuery, path, key, 1)
-		rows, err = proddbhandle.Query(sqlQueryLoadFIle)
+		rows, err = db.RandomQuery(sqlQueryLoadFIle)
 		if err != nil {
 			glog.Errorln(err)
 		}
@@ -91,19 +91,19 @@ func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]
 
 }
 
-func GetNSEBroadMarketIndexLists(client *http.Client, proddbhandle util.DB) {
+func GetNSEBroadMarketIndexLists(client *http.Client) {
 	glog.Infoln("============Getting NSE Broad Market Indices along with Listed Comapnies==============")
 	/* TBD AJAY req/resp/client which objects should be created outside loop?*/
-	getNSEIndexList(client, proddbhandle, util.NSEBroadMarketIndexList)
+	getNSEIndexList(client, util.NSEBroadMarketIndexList)
 }
 
-func GetNSESectoralIndexLists(client *http.Client, proddbhandle util.DB) {
+func GetNSESectoralIndexLists(client *http.Client) {
 	glog.Infoln("============Getting NSE Sectoral Indices along with Listed Comapnies==============")
 	/* TBD AJAY req/resp/client which objects should be created outside loop?*/
-	getNSEIndexList(client, proddbhandle, util.NSESectoralIndexList)
+	getNSEIndexList(client, util.NSESectoralIndexList)
 }
 
-func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, deleteFromTable bool) { //noOfDays int) {
+func GetNSESecuritiesFullBhavData(client *http.Client, deleteFromTable bool) { //noOfDays int) {
 	fmt.Println("inside GetNSESecuritiesFullBhavData")
 	/* TBD ajay fetch data for today, this one is for yesterday */
 	//today := time.Now().Add(time.Duration(-86400*1) * time.Second)
@@ -152,7 +152,7 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	/* Load csv into mysql */
 	sqlQueryLoadFIle := fmt.Sprintf(util.LoadFileQueryNSEFBD, path, util.NSEFBDDateFormat)
 
-	rows, err := proddbhandle.Query(sqlQueryLoadFIle)
+	rows, err := db.RandomQuery(sqlQueryLoadFIle)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -162,7 +162,7 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 
 	/* delete from table the data for oldest day */
 	if deleteFromTable == true {
-		rows, err = proddbhandle.Query(util.DeleteTableQueryNSEFBD)
+		rows, err = db.RandomQuery(util.DeleteTableQueryNSEFBD)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -172,7 +172,7 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	}
 
 	/* update pe,pb */
-	err = db.UpdateMoneycontrolSecurityDetails(proddbhandle)
+	err = db.UpdateMoneycontrolSecurityDetails()
 	if err != nil {
 		fmt.Println("error UpdateMoneycontrolSecurityDetails")
 	}

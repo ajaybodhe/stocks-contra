@@ -211,7 +211,7 @@ func getNseCorporateAnnouncementDataValue(announcementDataStr string, substring 
 	return dataValue, i+j
 }
 
-func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url string) error{
+func GetNseCorporateAnnouncements(client *http.Client, url string) error{
 //func GetNseCorporateAnnouncements( proddbhandle util.DB, url string) error{
 //	tr := &http.Transport{
 //        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -223,7 +223,7 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 	announcements := make([]*coreStructures.NseCorporateAnnouncementData, 0)
 	check := interestedSubjects()
 	
-	lastAnnouncement, err := db.ReadMaxDateRecordNseCorporateAnnouncement(proddbhandle)
+	lastAnnouncement, err := db.ReadMaxDateRecordNseCorporateAnnouncement()
 	if err != nil {
 		lastAnnouncement = nil
 	}
@@ -354,6 +354,6 @@ func GetNseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url
 		start += limit
 	}
 //	fmt.Printf("\nannoucements:%v, len=%v", announcements, len(announcements))
-	_ = db.WriteNseCorporateAnnouncements(proddbhandle, announcements)
+	_ = db.WriteNseCorporateAnnouncements(announcements)
 	return nil
  }

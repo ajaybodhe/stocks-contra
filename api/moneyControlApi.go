@@ -271,9 +271,9 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 	*/
 }
 
-func FetchNStoreMoneyControlData(client *http.Client, proddbhandle util.DB) error {
+func FetchNStoreMoneyControlData(client *http.Client) error {
 	// fetch the symbols first
-	symbols, err := db.GetSecuritySymbols(proddbhandle)
+	symbols, err := db.GetSecuritySymbols()
 	if err != nil {
 		glog.Errorln("Failed to fetch symbols from db", err.Error())
 		return err
@@ -290,7 +290,7 @@ func FetchNStoreMoneyControlData(client *http.Client, proddbhandle util.DB) erro
 		mcssAll[each] = mcss
 	}
 	// push slide into db
-	err = db.WriteSecurityDetails(proddbhandle, mcssAll)
+	err = db.WriteSecurityDetails(mcssAll)
 	if err != nil {
 		glog.Errorln("Failed to store symbol data from monecontrol", err.Error())
 	}

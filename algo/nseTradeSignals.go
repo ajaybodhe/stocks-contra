@@ -10,24 +10,25 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/ajaybodhe/stocks-contra/workers"
 )
 
-func NSESecuritiesBuySignal(dbHandle util.DB) error {
+func NSESecuritiesBuySignal() error {
 	// BUY SIGNAL ALGORITHM
 
 	/* join full bhav copy daya, close price, % delivery data */
-	nbdm, err := db.ReadNseBhavData(dbHandle, nil)
+	nbdm, err := db.ReadNseBhavData(nil)
 	if err != nil {
 		fmt.Println("error executing ReadNseBhavData", err)
 		return err
 	}
 	/* get eps, pe, pe-industry, 52 week high low */
-	mcssCollection, err := db.ReadAllSecurityDetails(dbHandle, nil)
+	mcssCollection, err := db.ReadAllSecurityDetails(nil)
 	if err != nil {
 		fmt.Println("error executing ReadAllSecurityDetails", err)
 		return err
 	}
-	bloomFilter,_ := db.GetInterestedSymbolsBloom(dbHandle)
+	bloomFilter,_ := db.GetInterestedSymbolsBloom()
 	/* map of all securities corrected */
 	nlsd := make(map[string]coreStructures.NseSecurityLongSignalData)
 	/* check the stocks which have corrected for last few days n delivery % has gone up
@@ -159,7 +160,7 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 	// TBD this algorithm
 
 	// store the map in database
-	err = db.WriteNSESecuritiesBuySignal(dbHandle, nlsd)
+	err = db.WriteNSESecuritiesBuySignal(nlsd)
 	if err != nil {
 		fmt.Println("error executing NSESecuritiesBuySignal", err)
 		return err
@@ -170,58 +171,74 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 	return nil
 }
 
+
+// spawn goroutines
+
+// pass all symbols on a work channel, where workers will pull the info n print the details
+// (store previos details in redis list or influxdb)
+// sleep for two min, repeat
 /* poll current NSE order book */
-func NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) error {
-	symbolStrategyMap, err := db.RetrieveAllSymbolsNStrategy(dbHandle)
+func NseOrderBookAnalyser() error {
+	
+	dispatcher := workers.NewDispatcher(workers.MaxWorker, NseLiveQuoteAnalyser)
+	
+	//TODO
+	// algo/nseTradeSignals.go:187: cannot use [2]string literal (type [2]string) as type []string in argument to db.GetInterestedSymbols
+	tables :=make([]string, 2)
+	tables[0]=util.NIFTY_50
+	tables[1]=util.NIFTY_NEXT_50
+	
+	// read all symbols from NSE_50 and NSE_Next_50
+	symbols, err := db.GetInterestedSymbols(tables)
 	if err != nil {
 		return err
 	}
-	// use sync.waitgroup to wait here
-	done := make(chan bool)
-	for k, v := range symbolStrategyMap {
-		//if v != util.InvalidStrategy {
-		go NseLiveQuoteAnalyser(done, client, k, v)
-		///time.Sleep(10 * time.Second)
-		//}
+	
+	// create jobqueue
+	jq := workers.CreateJobQueue(workers.MaxQueue)
+	
+	// run the dispatcher
+	dispatcher.Run(jq)
+
+	for {
+		for i := range symbols {
+			jq<-workers.Job{Payload:symbols[i]}
+		}
+		
+		time.Sleep(2 * time.Minute)
 	}
-	// sleep till 3.30 pm
-	time.Sleep(2 * time.Hour)
-	close(done)
 	return nil
 }
 
 // all of these function should run between 9.15 am to 3.30
 // yithen they should be destroyed by a signal on channel
-func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, strategy int) {
-	///fmt.Println("inside NseLiveQuoteAnalyser:", symbol)
-	for {
-		select {
-		case <-time.After(5 * time.Minute):
-			///fmt.Println("SYMBOL IS:", symbol)
-			nseLQD := api.GetNSELiveQuote(client, symbol)
-			//fmt.Printf("%d	%v	%v\n", len(nseLQD.Data), nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity)
-			if nseLQD != nil &&
-				nseLQD.Data != nil &&
-				len(nseLQD.Data) >= 1 {
-				totalBuyQty := strings.Replace(nseLQD.Data[0].TotalBuyQuantity, util.CommaChar, util.EmptyString, -1)
-				totalSellQty := strings.Replace(nseLQD.Data[0].TotalSellQuantity, util.CommaChar, util.EmptyString, -1)
-				tBQ, _ := strconv.Atoi(totalBuyQty)
-				tSQ, _ := strconv.Atoi(totalSellQty)
-				if tBQ != 0 && tSQ != 0 {
-					if ((tBQ - tSQ) / tSQ * 100) > 20 {
-						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-						fmt.Println("\nBuy symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
-						//fmt.Printf("\n%v\n", nseLQD)
-					} else if ((tSQ - tBQ) / tSQ * 100) > 50 {
-						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-						fmt.Println("\nSell symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
-						//fmt.Printf("\n%v\n", nseLQD)
-					}
-				}
+func NseLiveQuoteAnalyser(job workers.Job, client *http.Client) {
+	symbol := job.Payload.(string)
+	nseLQD := api.GetNSELiveQuote(client, symbol)
+	
+	if nseLQD != nil &&
+		nseLQD.Data != nil &&
+		len(nseLQD.Data) >= 1 {
+
+		totalBuyQty := strings.Replace(nseLQD.Data[0].TotalBuyQuantity, util.CommaChar, util.EmptyString, -1)
+		totalSellQty := strings.Replace(nseLQD.Data[0].TotalSellQuantity, util.CommaChar, util.EmptyString, -1)
+
+		tBQ, _ := strconv.Atoi(totalBuyQty)
+		tSQ, _ := strconv.Atoi(totalSellQty)
+		
+		if tBQ != 0 && tSQ != 0 {
+			fmt.Printf("step 4, symbol=%v, tbq=%v, tsq=%v\n", symbol, tBQ, tSQ)
+			if ((tBQ - tSQ) / tSQ * 100) > 20 {
+				
+				//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
+				fmt.Println("\nBuy symbol:", symbol, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
+				//fmt.Printf("\n%v\n", nseLQD)
+			} else if ((tSQ - tBQ) / tSQ * 100) > 50 {
+				//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
+				fmt.Println("\nSell symbol:", symbol, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
+				//fmt.Printf("\n%v\n", nseLQD)
 			}
-		case <-done:
-			//break
-			return
 		}
 	}
+
 }

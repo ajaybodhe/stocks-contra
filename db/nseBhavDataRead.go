@@ -5,7 +5,6 @@ import (
 	//"database/sql/driver"
 	"fmt"
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
-	"github.com/ajaybodhe/stocks-contra/util"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang/glog"
 	"time"
@@ -13,12 +12,12 @@ import (
 
 const allSecurityNseBhavDataSql = "select symbol, date, prev_close, open_price, high_price, low_price, last_price, close_price, avg_price, ttl_trd_qnty, deliv_qty, deliv_per from  NSESecuritiesFullBhavData order by symbol, date;"
 
-func ReadNseBhavData(db util.DB, securitySymbols []string) (map[string][]coreStructures.NseBhavRecord, error) {
+func ReadNseBhavData(securitySymbols []string) (map[string][]coreStructures.NseBhavRecord, error) {
 	var rows *sql.Rows
 	var err error
 
 	if len(securitySymbols) <= 0 {
-		rows, err = db.Query(allSecurityNseBhavDataSql)
+		rows, err = proddbhandle.Query(allSecurityNseBhavDataSql)
 		fmt.Println("Query NSE:", allSecurityNseBhavDataSql)
 	} else {
 		firstTime := true
@@ -32,7 +31,7 @@ func ReadNseBhavData(db util.DB, securitySymbols []string) (map[string][]coreStr
 			}
 		}
 		specificSecurityNseBhavDataSql = specificSecurityNseBhavDataSql + ") order by symbol, date;"
-		rows, err = db.Query(specificSecurityNseBhavDataSql)
+		rows, err = proddbhandle.Query(specificSecurityNseBhavDataSql)
 		fmt.Println("query NSE:", specificSecurityNseBhavDataSql)
 	}
 

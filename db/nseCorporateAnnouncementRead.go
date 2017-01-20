@@ -7,7 +7,6 @@ import (
 	//"database/sql/driver"
 	"fmt"
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
-	"github.com/ajaybodhe/stocks-contra/util"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang/glog"
 	//"time"
@@ -15,10 +14,10 @@ import (
 
 const nseCorporateAnnouncementReadQuery = "select company, symbol, date, subject, announcement from NseCorporateAnnouncement where date = (select max(date) from NseCorporateAnnouncement);"
 
-func ReadMaxDateRecordNseCorporateAnnouncement(db util.DB) (*coreStructures.NseCorporateAnnouncementData, error){
+func ReadMaxDateRecordNseCorporateAnnouncement() (*coreStructures.NseCorporateAnnouncementData, error){
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(nseCorporateAnnouncementReadQuery)
+	rows, err = proddbhandle.Query(nseCorporateAnnouncementReadQuery)
 	if err != nil {
 		return nil, fmt.Errorf("ReadMaxDateRecordNseCorporateAnnouncement err: sql error:%s\n", err.Error())
 	}

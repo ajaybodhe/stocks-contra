@@ -9,7 +9,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	//"github.com/ajaybodhe/stocks-contra/db"
 	//"github.com/ajaybodhe/stocks-contra/conf"
-	"github.com/ajaybodhe/stocks-contra/util"
 	"github.com/golang/glog"
 	"errors"
 	"net/http"
@@ -41,7 +40,7 @@ func interestedBseSubjects() func(subject string) bool {
 	}
 }
 
-func GetBseCorporateAnnouncements(client *http.Client, proddbhandle util.DB, url string) error{
+func GetBseCorporateAnnouncements(client *http.Client, url string) error{
 	start := 1
 	limit := 20
 	stopFlag := false

@@ -10,10 +10,10 @@ import (
 
 const securitySymbolSql = "select distinct symbol from NSESecuritiesFullBhavData order by symbol"
 
-func GetSecuritySymbols(db util.DB) ([]string, error) {
+func GetSecuritySymbols() ([]string, error) {
 	var securitySymbols []string
 
-	rows, err := db.Query(securitySymbolSql)
+	rows, err := proddbhandle.Query(securitySymbolSql)
 	if err != nil {
 		return nil, fmt.Errorf("fetch security symbols: sql error:%s\n", err.Error())
 	}
@@ -38,7 +38,7 @@ func GetSecuritySymbols(db util.DB) ([]string, error) {
 }
 
 const bloomSecuritySymbolSql = "select distinct symbol from %v order by symbol"
-func GetInterestedSymbolsBloom(db util.DB) (*coreStructures.BloomFilter, error) {
+func GetInterestedSymbolsBloom() (*coreStructures.BloomFilter, error) {
 	
 	bloomFilter := coreStructures.NewBloomFilter(util.BloomBits, util.BloomHashCount)
 	
@@ -48,7 +48,7 @@ func GetInterestedSymbolsBloom(db util.DB) (*coreStructures.BloomFilter, error) 
 	
 		fmt.Printf("\nquery=%v\n", query)
 		
-		rows, err := db.Query(query)
+		rows, err := proddbhandle.Query(query)
 		if err != nil {
 			return nil, fmt.Errorf("fetch security symbols for bloom: sql error:%s\n", err.Error())
 		}
@@ -65,4 +65,34 @@ func GetInterestedSymbolsBloom(db util.DB) (*coreStructures.BloomFilter, error) 
 		}
 	}
 	return bloomFilter, nil
+}
+
+const interestedSecuritySymbolsSql = "select distinct symbol from %v order by symbol"
+func GetInterestedSymbols(tables []string) ([]string, error) {
+	
+	var symbols []string
+
+	for k,_ := range tables {
+		
+		query := fmt.Sprintf(interestedSecuritySymbolsSql, tables[k])
+		
+		fmt.Printf("\nquery=%v\n", query)
+		
+		rows, err := proddbhandle.Query(query)
+		if err != nil {
+			return nil, fmt.Errorf("fetch interested security symbols: sql error:%s\n", err.Error())
+		}
+		defer rows.Close()
+		
+		var securitySymbol string
+		
+		for rows.Next() {
+			if err = rows.Scan(&securitySymbol); err != nil {
+				glog.Error("error: while reading input in interested security symbol fetch:error:%s", err.Error())
+				return nil, err
+			}
+			symbols = append(symbols,securitySymbol)
+		}
+	}
+	return symbols, nil
 }
