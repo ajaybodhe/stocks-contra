@@ -171,13 +171,6 @@ func NSESecuritiesBuySignal() error {
 	return nil
 }
 
-
-// spawn goroutines
-
-// pass all symbols on a work channel, where workers will pull the info n print the details
-// (store previos details in redis list or influxdb)
-// sleep for two min, repeat
-/* poll current NSE order book */
 func NseOrderBookAnalyser() error {
 	
 	dispatcher := workers.NewDispatcher(workers.MaxWorker, NseLiveQuoteAnalyser)
