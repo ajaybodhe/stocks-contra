@@ -1,16 +1,8 @@
 package core
 
 import (
-//	"time"
-	"fmt"
 	"github.com/ajaybodhe/stocks-contra/algo"
-	//"github.com/ajaybodhe/stocks-contra/api"
 	_ "github.com/go-sql-driver/mysql"
-	//"net/http"
-		//"crypto/tls"
-	"github.com/ajaybodhe/stocks-contra/api"
-	"github.com/ajaybodhe/stocks-contra/util"
-	"time"
 	"sync"
 )
 
@@ -82,21 +74,17 @@ func Serve() {
 	//}
 
 	//fmt.Printf("%v", api.GetNSELiveQuote(client, "ABB"))
+	
 	var wg sync.WaitGroup
-	wg.Add(1)
 	go algo.NseOrderBookAnalyser(&wg)
+	wg.Add(1)
 	
+	go algo.NseNewsAnalyser(&wg)
+	wg.Add(1)
 	
-	for {
-		wg.Add(1)
-		err = api.GetNseCorporateAnnouncements(&wg, client, proddbhandle, util.NSECorporateAnnounceMentLink)
-		if err != nil {
-			fmt.Println("GetNseCorporateAnnouncements failed")
-		}
-		time.Sleep(time.Second * 10)
-	}
-//	err := api.GetBseCorporateAnnouncements(client, proddbhandle, util.BSECorporateAnnounceMentLink)
+	//	err := api.GetBseCorporateAnnouncements(client, proddbhandle, util.BSECorporateAnnounceMentLink)
 //	if err != nil {
 //		fmt.Println("GetBseCorporateAnnouncements failed")
 //	}
+	wg.Wait()
 }

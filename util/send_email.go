@@ -2,6 +2,8 @@ package util
 
 import (
 	"gopkg.in/gomail.v2"
+	"os/exec"
+	"fmt"
 )
 
 func SendMail(from, to, subject, body, attachementPath, password string) {
@@ -18,4 +20,14 @@ func SendMail(from, to, subject, body, attachementPath, password string) {
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)
 	}
+	
+	// delete the file
+	if attachementPath != "" {
+		cmd := exec.Command("rm", "-f", attachementPath)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }
+

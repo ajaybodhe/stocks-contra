@@ -23,3 +23,10 @@ type NseCorporateAnnouncement struct{
 	Success string `json:"success"`
 	ResultCount int `json:"results"`
 }
+
+type NseShortCorporateAnnouncement struct {
+	Company string `json:"company"`
+	Symbol string `json:"symbol"`
+	//LatAnnouncementDate time.Time `json:"date"`
+	FullDataURL string `json:"full_data_url"`
+}

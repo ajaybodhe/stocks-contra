@@ -11,6 +11,9 @@ import (
 	"strings"
 	"time"
 	"github.com/ajaybodhe/stocks-contra/workers"
+	"sync"
+	"crypto/tls"
+	"github.com/ajaybodhe/stocks-contra/conf"
 )
 
 func NSESecuritiesBuySignal() error {
@@ -171,7 +174,53 @@ func NSESecuritiesBuySignal() error {
 	return nil
 }
 
-func NseOrderBookAnalyser() error {
+func NseNewsAnalyser(wg *sync.WaitGroup) {
+	defer wg.Done()
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	
+	// create jobqueue
+	jq := workers.CreateJobQueue(workers.MaxQueue/2)
+	
+	dispatcher := workers.NewDispatcher(workers.MaxWorker/2, NseCorporateNewsAnalyser)
+	// run the dispatcher
+	dispatcher.Run(jq)
+	
+	api.GetNseCorporateAnnouncements(client, jq)
+	
+}
+
+func NseCorporateNewsAnalyser(job workers.Job, client *http.Client) {
+	
+	announcement := job.Payload.(coreStructures.NseShortCorporateAnnouncement)
+	
+	corporateAnnoucement, err := api.GetNseFullCorporateAnnoucement(client, announcement.FullDataURL)
+	
+	if err == nil {
+		corporateAnnoucement.Company = announcement.Company
+		corporateAnnoucement.Symbol = announcement.Symbol
+		fmt.Printf("\nannouncement=%v\n", corporateAnnoucement)
+		
+		imp := SentimentAnalyser(corporateAnnoucement.Announcement)
+		if imp == true {
+			NseOrderBookQueue <- workers.Job{Payload:corporateAnnoucement.Symbol}
+			
+			go util.SendMail(conf.StocksContraConfig.EMAIL.From,
+				conf.StocksContraConfig.EMAIL.To,
+				"Company:" + corporateAnnoucement.Company + "  Subject:" + corporateAnnoucement.Subject + "(" + corporateAnnoucement.Symbol + ")"  + "(" + corporateAnnoucement.Date.String() + ")",
+				corporateAnnoucement.Announcement,
+				corporateAnnoucement.AttachmentFilePath,
+				conf.StocksContraConfig.EMAIL.Password)
+		}
+	}
+	
+}
+
+func NseOrderBookAnalyser(wg *sync.WaitGroup)  {
+	
+	defer wg.Done()
 	
 	dispatcher := workers.NewDispatcher(workers.MaxWorker, NseLiveQuoteAnalyser)
 	
@@ -184,27 +233,22 @@ func NseOrderBookAnalyser() error {
 	// read all symbols from NSE_50 and NSE_Next_50
 	symbols, err := db.GetInterestedSymbols(tables)
 	if err != nil {
-		return err
+		return
 	}
 	
-	// create jobqueue
-	jq := workers.CreateJobQueue(workers.MaxQueue)
-	
 	// run the dispatcher
-	dispatcher.Run(jq)
+	dispatcher.Run(NseOrderBookQueue)
 
 	for {
 		for i := range symbols {
-			jq<-workers.Job{Payload:symbols[i]}
+			NseOrderBookQueue<-workers.Job{Payload:symbols[i]}
 		}
 		
 		time.Sleep(2 * time.Minute)
 	}
-	return nil
 }
 
-// all of these function should run between 9.15 am to 3.30
-// yithen they should be destroyed by a signal on channel
+
 func NseLiveQuoteAnalyser(job workers.Job, client *http.Client) {
 	symbol := job.Payload.(string)
 	nseLQD := api.GetNSELiveQuote(client, symbol)
@@ -224,11 +268,11 @@ func NseLiveQuoteAnalyser(job workers.Job, client *http.Client) {
 			if ((tBQ - tSQ) / tSQ * 100) > 20 {
 				
 				//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-				fmt.Println("\nBuy symbol:", symbol, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
+				fmt.Println("\nBuy symbol:", symbol, "Price", nseLQD.Data[0].LastPrice, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
 				//fmt.Printf("\n%v\n", nseLQD)
 			} else if ((tSQ - tBQ) / tSQ * 100) > 50 {
 				//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-				fmt.Println("\nSell symbol:", symbol, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
+				fmt.Println("\nSell symbol:", symbol, "Price", nseLQD.Data[0].LastPrice, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
 				//fmt.Printf("\n%v\n", nseLQD)
 			}
 		}

@@ -7,8 +7,6 @@ import (
 	"strings"
 	"github.com/ajaybodhe/stocks-contra/coreStructures"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/ajaybodhe/stocks-contra/db"
-	"github.com/ajaybodhe/stocks-contra/conf"
 	"github.com/ajaybodhe/stocks-contra/util"
 	"github.com/golang/glog"
 	//"errors"
@@ -23,8 +21,8 @@ import (
 	"fmt"
 	"compress/gzip"
 	"bytes"
-	"os/exec"
 	"time"
+	"github.com/ajaybodhe/stocks-contra/workers"
 )
 
 const (
@@ -34,6 +32,8 @@ const (
 	nseDate = "date"
 	nseLink = "link" 
 )
+
+var LastAnnouncementDate string
 
 func interestedSubjects() func(subject string) bool {
 	interestedSubjectsMap := map[string]bool {
@@ -101,7 +101,7 @@ func downloadNseAnnouncementFile(client *http.Client, url string) (string, error
 	return path, nil
 }
 
-func getNseFullCorporateAnnoucement(client *http.Client, url string) (*coreStructures.NseCorporateAnnouncementData, error){
+func GetNseFullCorporateAnnoucement(client *http.Client, url string) (*coreStructures.NseCorporateAnnouncementData, error){
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		glog.Fatalln(err)
@@ -211,26 +211,20 @@ func getNseCorporateAnnouncementDataValue(announcementDataStr string, substring 
 	return dataValue, i+j
 }
 
-func GetNseCorporateAnnouncements(client *http.Client, url string) error{
-//func GetNseCorporateAnnouncements( proddbhandle util.DB, url string) error{
-//	tr := &http.Transport{
-//        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-//    }
-//	client := &http.Client{Transport: tr}
+func GetNseCorporateAnnouncements(client *http.Client, jq chan workers.Job) error{
+	
+	url := util.NSECorporateAnnounceMentLink
+
 	start := 0
 	limit := 20
-	stopFlag := false
-	announcements := make([]*coreStructures.NseCorporateAnnouncementData, 0)
+	
 	check := interestedSubjects()
 	
-	lastAnnouncement, err := db.ReadMaxDateRecordNseCorporateAnnouncement()
-	if err != nil {
-		lastAnnouncement = nil
-	}
+	var mostRecentDate string
 	
-	for start < 30 && stopFlag == false {
+	for  {
 		url1 := url + "?start=" + strconv.Itoa(start) + "&limit=" + strconv.Itoa(limit)
-		fmt.Printf("\nurl=%v\n", url1)
+		
 		req, err := http.NewRequest("GET", url1, nil)
 		if err != nil {
 			fmt.Println(err)
@@ -242,13 +236,13 @@ func GetNseCorporateAnnouncements(client *http.Client, url string) error{
 		req.Header.Set("Connection", "keep-alive")
 		req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 		req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-//		req.Header.Set("If-Modified-Since","Sun, 29 May 2016 07:20:07 GMT")
 		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Println(":Result:Fail:Error:", err.Error())
 		}
-		fmt.Printf("\nrespionse=%v", resp.Body)
+
 		defer resp.Body.Close()
 	
 		var reader io.ReadCloser
@@ -271,12 +265,12 @@ func GetNseCorporateAnnouncements(client *http.Client, url string) error{
 			}
 		}
 		announcementDataStr = announcementDataStr[count:]
-		fmt.Printf("\nResponse Status = %v\n\nResponse Body = %+v\n", resp.Status, announcementDataStr)
 		
-		//var announcements coreStructures.NseCorporateAnnouncement 
+		lena :=  len(announcementDataStr)
+		//var announcements coreStructures.NseCorporateAnnouncement
 		charsCount := 0
 		
-		for stopFlag == false {
+		for  charsCount < lena {
 			company, i := getNseCorporateAnnouncementDataValue(announcementDataStr[charsCount:], nseCompany)
 			if i == -1 {
 				break
@@ -301,59 +295,34 @@ func GetNseCorporateAnnouncements(client *http.Client, url string) error{
 			}
 			charsCount += i
 		
-			_, i = getNseCorporateAnnouncementDataValue(announcementDataStr[charsCount:], nseDate)
+			sdate, i := getNseCorporateAnnouncementDataValue(announcementDataStr[charsCount:], nseDate)
 			if i == -1 {
 				break
 			}
 			charsCount += i
 			
+			if sdate >mostRecentDate {
+				mostRecentDate = sdate
+			}
+			if sdate < LastAnnouncementDate {
+				break
+			}
 			//TBD AJAY fetch the actual data attchements & mail
 			fullDataURL := util.NseBaseURL + link
-			fmt.Printf("\nFullURL = %v\n", fullDataURL)
 			if check(desc) == false {
 				continue
 			}
-			corporateAnnoucement, err := getNseFullCorporateAnnoucement(client, fullDataURL)
-			if err == nil {
-				corporateAnnoucement.Company = company
-				corporateAnnoucement.Symbol = symbol
-				fmt.Printf("\nannouncement=%v\n", corporateAnnoucement)
-				util.SendMail(conf.StocksContraConfig.EMAIL.From,
-						conf.StocksContraConfig.EMAIL.To,
-						"Company:" + corporateAnnoucement.Company + "  Subject:" + corporateAnnoucement.Subject + "(" + corporateAnnoucement.Symbol + ")"  + "(" + corporateAnnoucement.Date.String() + ")",
-						corporateAnnoucement.Announcement,
-						corporateAnnoucement.AttachmentFilePath,
-						conf.StocksContraConfig.EMAIL.Password)
-			}
 			
-			
-			fmt.Printf("\nlastAnnouncement:%v", lastAnnouncement.Date)
-			fmt.Printf("\ncorpAnnouncement:%v", corporateAnnoucement.Date)
-			if lastAnnouncement != nil && corporateAnnoucement != nil && corporateAnnoucement.Date.Before(lastAnnouncement.Date) == true {
-				stopFlag = true
-			} else if corporateAnnoucement != nil  {
-//				fmt.Printf("\norporateAnnoucement.Announcement= %v",corporateAnnoucement.Announcement)
-				corporateAnnoucement.Announcement = strings.Replace(corporateAnnoucement.Announcement, "\"", "\\\"", -1)
-//				fmt.Printf("\norporateAnnoucement.Announcement= %v",corporateAnnoucement.Announcement)
-				announcements = append(announcements, corporateAnnoucement)
-			} 
-			
-			//TBD AJAY store the data which was mailed in DB as well & then fetch only those records not fetched earlier
-			
-			/* delete the downloaded file */
-			if corporateAnnoucement.AttachmentFilePath != "" {
-				cmd := exec.Command("rm", "-f", corporateAnnoucement.AttachmentFilePath)
-				err = cmd.Run()
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
+			jq <- workers.Job{Payload:
+				coreStructures.NseShortCorporateAnnouncement{
+					Symbol:symbol,
+					Company:company,
+					FullDataURL:fullDataURL,
+				}}
 			//TBD AJAY run this in goroutine after 15 seconds
 			//TBD AJAY stop after the last read record is found
 		}
-		start += limit
+		LastAnnouncementDate = mostRecentDate
+		time.Sleep(1 * time.Minute)
 	}
-//	fmt.Printf("\nannoucements:%v, len=%v", announcements, len(announcements))
-	_ = db.WriteNseCorporateAnnouncements(announcements)
-	return nil
  }

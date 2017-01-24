@@ -121,5 +121,4 @@ func CreateJobQueue(maxQueue int) (chan Job){
 }
 
 func init() {
-	//JobQueue  = make(chan Job, MaxQueue)
 }
