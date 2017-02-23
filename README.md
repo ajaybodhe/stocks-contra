@@ -46,3 +46,4 @@ go get github.com/scalingdata/gcfg
 go get gopkg.in/gomail.v2
 go get github.com/PuerkitoBio/goquery
 go get github.com/willf/bitset
+go get github.com/cdipaolo/sentiment
