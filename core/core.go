@@ -4,7 +4,7 @@ import (
 //	"time"
 	"database/sql"
 	"fmt"
-	"github.com/ajaybodhe/stocks-contra/algo"
+	//"github.com/ajaybodhe/stocks-contra/algo"
 	"github.com/ajaybodhe/stocks-contra/api"
 	"github.com/ajaybodhe/stocks-contra/conf"
 	
@@ -63,36 +63,38 @@ func Serve() {
 	parallelise api calls
 	few ratios missing: debt/equity, roe, roce, roa
 	*/
-	var err error
+	//var err error
 	initDB()
 	tr := &http.Transport{
         TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
     }
 	client := &http.Client{Transport: tr}
 
-	/* Call to this function depends on passed argument */
-	api.GetNSESectoralIndexLists(client, proddbhandle)
-	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
+	///* Call to this function depends on passed argument */
+	//api.GetNSESectoralIndexLists(client, proddbhandle)
+	//api.GetNSEBroadMarketIndexLists(client, proddbhandle)
+	//
+	///*getNSEDeliveryPercentageData(5)*/
+	//api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+	//
+	//err = api.FetchNStoreMoneyControlData(client, proddbhandle)
+	//if err != nil {
+	//	fmt.Println("FetchNStoreMoneyControlData failed")
+	//}
+	//
+	//err = algo.NSESecuritiesBuySignal(proddbhandle)
+	//if err != nil {
+	//	fmt.Println("NSESecuritiesBuySignal failed")
+	//}
 
-	/*getNSEDeliveryPercentageData(5)*/
-	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+	fmt.Printf("%v", api.GetNSELiveQuote(client, "RELIANCE"))
+	fmt.Printf("%v", api.GetNSELiveQuote(client, "BHARTIARTL"))
+	fmt.Printf("%v", api.GetNSELiveQuote(client, "ASIANPAINT"))
+	//err = algo.NseOrderBookAnalyser(client, proddbhandle)
+	//if err != nil {
+	//	fmt.Println("NseOrderBookAnalyser failed")
+	//}
 
-	err = api.FetchNStoreMoneyControlData(client, proddbhandle)
-	if err != nil {
-		fmt.Println("FetchNStoreMoneyControlData failed")
-	}
-
-	err = algo.NSESecuritiesBuySignal(proddbhandle)
-	if err != nil {
-		fmt.Println("NSESecuritiesBuySignal failed")
-	}
-
-	//fmt.Printf("%v", api.GetNSELiveQuote(client, "ABB"))
-//	err = algo.NseOrderBookAnalyser(client, proddbhandle)
-//	if err != nil {
-//		fmt.Println("NseOrderBookAnalyser failed")
-//	}
-	
 //	for {
 //		err = api.GetNseCorporateAnnouncements(client, proddbhandle, util.NSECorporateAnnounceMentLink)
 //		if err != nil {

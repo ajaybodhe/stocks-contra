@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"strings"
 	//"time"
+	"time"
 )
 
 func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]string) {
@@ -228,6 +229,7 @@ func GetNSELiveQuote(client *http.Client, symbol string) *coreStructures.NseLive
 		reader = resp.Body
 	}
 
+	t1 := time.Now()
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
 	quoteDataStr := buf.String()
@@ -237,13 +239,16 @@ func GetNSELiveQuote(client *http.Client, symbol string) *coreStructures.NseLive
 	strs := strings.Split(quoteDataStr, "\n")
 	for i := range strs {
 		if strings.Contains(strs[i], "futLink") {
+			t2:= time.Now()
 			if err = json.Unmarshal([]byte(strs[i]), &nseLQD); err != nil {
 				return nil
 			}
-			//fmt.Printf("%+v", nseLQD)
+			fmt.Printf("json unmarshal time ", time.Since(t2))
 			break
 		}
 	}
+	
+	fmt.Println("time taken to fetch results. ", time.Since(t1))
 
 	resp.Body.Close()
 	return &nseLQD

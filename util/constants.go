@@ -25,7 +25,7 @@ const (
 	DeleteTableQueryNSEFBD        = "delete  from NSESecuritiesFullBhavData where date in (select minDate from (select min(date) as minDate from NSESecuritiesFullBhavData) as X) and exists (select count from (select if(count(distinct date)> 10, count(distinct date), 0) as count from NSESecuritiesFullBhavData) as Y where count > 0 );"
 	//DeleteTableQueryNSEFBD        = "delete from NSESecuritiesFullBhavData where date in (select date from (select min(date) date from NSESecuritiesFullBhavData) D);"
 
-	NSEGetLiveQuoteURL = "http://nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol=%s&illiquid=0&smeFlag=0&itpFlag=0"
+	NSEGetLiveQuoteURL = "https://nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol=%s&illiquid=0&smeFlag=0&itpFlag=0"
 	//MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s%sp&type=1&section=mc_home"
 	MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s&type=1&callback=suggest1&section=mc_home"
 
