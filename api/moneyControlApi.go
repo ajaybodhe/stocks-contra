@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"encoding/json"
 )
 
 func parseMoneyControlValue(quoteStr string, lenQuoteStr int, key string, charSkipCount int, valueEndChar string) (string, int) {
@@ -260,6 +261,7 @@ func GetMoneycontrolLiveQuote(client *http.Client, symbol string) (*coreStructur
 		mcss.OtherHolding = float32(util.ToFixed(value, 2))
 	}
 
+	fmt.Println("mcsssss is ", mcss)
 	return &mcss, nil
 
 	/*
@@ -319,19 +321,19 @@ func FetchNStoreMoneyControlData(client *http.Client, proddbhandle util.DB) erro
 func httpMoneycontrolLiveQuoteURL(client *http.Client, symbol, symbolComma, symbolForwardSlah, symbolBreakTag string) (string, string, bool) {
 	//reqURL := fmt.Sprintf(util.MoneyControlURLFetcher, symbol, "%20")
 	reqURL := fmt.Sprintf(util.MoneyControlURLFetcher, symbol)
-	fmt.Println("reqURL", reqURL)
+	//fmt.Println("reqURL", reqURL)
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		glog.Fatalln(err)
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:28.0) Gecko/20100101 Firefox/28.0")
-	req.Header.Set("Host", "www.moneycontrol.com")
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Set("Accept-Encoding", "gzip, deflate")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	//req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:28.0) Gecko/20100101 Firefox/28.0")
+	//req.Header.Set("Host", "www.moneycontrol.com")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	//req.Header.Set("Cache-Control", "no-cache")
+	//req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	//req.Header.Set("Accept-Encoding", "gzip, deflate")
+	//req.Header.Set("Accept", "text/html,application/json,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
 	/* get the response */
 	resp, err := client.Do(req)
@@ -353,39 +355,53 @@ func httpMoneycontrolLiveQuoteURL(client *http.Client, symbol, symbolComma, symb
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
-	quoteDataStr := buf.String()
-
-	subStr := strings.Split(quoteDataStr, "a href=\"")
-
-	//fmt.Println(subStr)
-	if len(subStr) == 2 {
-		quoteURL := strings.Split(subStr[1], "\">")
-		fmt.Println("this is it:::::")
-		fmt.Println(quoteURL[0])
-		return quoteURL[0], "", false
-	}
-
-	for index, each := range subStr {
-		fmt.Println(index, each)
-		if strings.Contains(each, symbolBreakTag) || strings.Contains(each, symbolComma) || strings.Contains(each, symbolForwardSlah) {
-			quoteURL := strings.Split(each, "\">")
+	str := buf.String()
+	str = strings.TrimSpace(str)
+	str = str[len("suggest1("):len(str)-1]
+	autoSuggestions :=  []coreStructures.MoneyControlAutoSuggestion{}
+	
+	json.Unmarshal([]byte(str), &autoSuggestions)
+	
+	for i:=0; i<len(autoSuggestions); i++ {
+		as := &autoSuggestions[i]
+		
+		if strings.Contains(as.PdtDsNm, symbol) {
 			fmt.Println("this is it:::::")
-			fmt.Println(quoteURL[0])
-			return quoteURL[0], "", false
-		}
-
-	}
-
-	nseSymbol := util.MoneycontrolNSESymbol + symbol
-	for _, each := range subStr {
-		quoteURL := strings.Split(each, "\">")
-		quoteStr := getHttpQuoteFile(quoteURL[0])
-		if strings.Contains(quoteStr, nseSymbol) {
-			fmt.Println("this is it:::::")
-			fmt.Println(quoteURL[0])
-			return quoteURL[0], quoteStr, true
+			fmt.Println(as.LinkSrc)
+			return as.LinkSrc, getHttpQuoteFile(as.LinkSrc), true
 		}
 	}
+	//subStr := strings.Split(quoteDataStr, "a href=\"")
+	//
+	////fmt.Println(subStr)
+	//if len(subStr) == 2 {
+	//	quoteURL := strings.Split(subStr[1], "\">")
+	//	fmt.Println("this is it:::::")
+	//	fmt.Println(quoteURL[0])
+	//	return quoteURL[0], "", false
+	//}
+	//
+	//for index, each := range subStr {
+	//	fmt.Println(index, each)
+	//	if strings.Contains(each, symbolBreakTag) || strings.Contains(each, symbolComma) || strings.Contains(each, symbolForwardSlah) {
+	//		quoteURL := strings.Split(each, "\">")
+	//		fmt.Println("this is it:::::")
+	//		fmt.Println(quoteURL[0])
+	//		return quoteURL[0], "", false
+	//	}
+	//
+	//}
+	//
+	//nseSymbol := util.MoneycontrolNSESymbol + symbol
+	//for _, each := range subStr {
+	//	quoteURL := strings.Split(each, "\">")
+	//	quoteStr := getHttpQuoteFile(quoteURL[0])
+	//	if strings.Contains(quoteStr, nseSymbol) {
+	//		fmt.Println("this is it:::::")
+	//		fmt.Println(quoteURL[0])
+	//		return quoteURL[0], quoteStr, true
+	//	}
+	//}
 
 	return "", "", false
 

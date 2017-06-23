@@ -27,7 +27,7 @@ const (
 
 	NSEGetLiveQuoteURL = "https://nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol=%s&illiquid=0&smeFlag=0&itpFlag=0"
 	//MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s%sp&type=1&section=mc_home"
-	MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s&type=1&callback=suggest1&section=mc_home"
+	MoneyControlURLFetcher = "http://www.moneycontrol.com/mccode/common/autosuggesion.php?query=%s&type=1&callback=suggest1&section=mc_home&format=json"
 
 	/* Moneycontrol Constants */
 	Sector              = "SECTOR:"

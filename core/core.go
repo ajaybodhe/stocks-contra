@@ -18,7 +18,9 @@ import (
 		"golang.org/x/text/encoding"
 		"golang.org/x/text/encoding/charmap"
 		"golang.org/x/text/transform"
-	*/)
+	*/
+	"github.com/ajaybodhe/stocks-contra/algo"
+)
 
 var client *http.Client
 var proddbhandle util.DB
@@ -63,33 +65,33 @@ func Serve() {
 	parallelise api calls
 	few ratios missing: debt/equity, roe, roce, roa
 	*/
-	//var err error
+	var err error
 	initDB()
 	tr := &http.Transport{
         TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
     }
 	client := &http.Client{Transport: tr}
 
-	///* Call to this function depends on passed argument */
-	//api.GetNSESectoralIndexLists(client, proddbhandle)
-	//api.GetNSEBroadMarketIndexLists(client, proddbhandle)
-	//
-	///*getNSEDeliveryPercentageData(5)*/
-	//api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
-	//
-	//err = api.FetchNStoreMoneyControlData(client, proddbhandle)
-	//if err != nil {
-	//	fmt.Println("FetchNStoreMoneyControlData failed")
-	//}
-	//
-	//err = algo.NSESecuritiesBuySignal(proddbhandle)
-	//if err != nil {
-	//	fmt.Println("NSESecuritiesBuySignal failed")
-	//}
+	/* Call to this function depends on passed argument */
+	api.GetNSESectoralIndexLists(client, proddbhandle)
+	api.GetNSEBroadMarketIndexLists(client, proddbhandle)
 
-	fmt.Printf("%v", api.GetNSELiveQuote(client, "RELIANCE"))
-	fmt.Printf("%v", api.GetNSELiveQuote(client, "BHARTIARTL"))
-	fmt.Printf("%v", api.GetNSELiveQuote(client, "ASIANPAINT"))
+	/*getNSEDeliveryPercentageData(5)*/
+	api.GetNSESecuritiesFullBhavData(client, proddbhandle, false)
+
+	err = api.FetchNStoreMoneyControlData(client, proddbhandle)
+	if err != nil {
+		fmt.Println("FetchNStoreMoneyControlData failed")
+	}
+
+	err = algo.NSESecuritiesBuySignal(proddbhandle)
+	if err != nil {
+		fmt.Println("NSESecuritiesBuySignal failed")
+	}
+
+	//fmt.Printf("%v", api.GetNSELiveQuote(client, "RELIANCE"))
+	//fmt.Printf("%v", api.GetNSELiveQuote(client, "BHARTIARTL"))
+	//fmt.Printf("%v", api.GetNSELiveQuote(client, "ASIANPAINT"))
 	//err = algo.NseOrderBookAnalyser(client, proddbhandle)
 	//if err != nil {
 	//	fmt.Println("NseOrderBookAnalyser failed")

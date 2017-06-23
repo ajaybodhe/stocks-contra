@@ -21,3 +21,17 @@ type MoneyControlSecurityStructure struct {
 	Low52           float32
 	Sector          string
 }
+
+type MoneyControlAutoSuggestion struct {
+	LinkSrc string `json:"link_src"`
+	LinkTrack string `json:"link_track"`
+	PdtDsNm string `json:"pdt_dis_nm"`
+	ScId string `json:"sc_id"`
+	StockName string `json:"stock_name"`
+	ScSectorId string `json:"sc_sector_id"`
+	ScSector string `json:"sc_sector"`
+}
+
+type MoneyControlAutoSuggestionArray struct {
+	MoneyControlAutoSuggestions []*MoneyControlAutoSuggestion `json:"money_control_auto_suggestion"`
+}
