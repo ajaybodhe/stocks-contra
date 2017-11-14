@@ -171,7 +171,7 @@ func NSESecuritiesBuySignal(dbHandle util.DB) error {
 }
 
 /* poll current NSE order book */
-func NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) error {
+func 	NseOrderBookAnalyser(client *http.Client, dbHandle util.DB) error {
 	symbolStrategyMap, err := db.RetrieveAllSymbolsNStrategy(dbHandle)
 	if err != nil {
 		return err
@@ -196,10 +196,8 @@ func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, 
 	///fmt.Println("inside NseLiveQuoteAnalyser:", symbol)
 	for {
 		select {
-		case <-time.After(5 * time.Minute):
-			fmt.Println("\n\nSYMBOL IS:", symbol)
+		case <-time.After(2 * time.Minute):
 			nseLQD := api.GetNSELiveQuote(client, symbol)
-			fmt.Println("%d	%v	%v\n", len(nseLQD.Data), nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity)
 			if nseLQD != nil &&
 				nseLQD.Data != nil &&
 				len(nseLQD.Data) >= 1 {
@@ -208,14 +206,14 @@ func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, 
 				tBQ, _ := strconv.Atoi(totalBuyQty)
 				tSQ, _ := strconv.Atoi(totalSellQty)
 				if tBQ != 0 && tSQ != 0 {
-					if ((tBQ - tSQ) / tSQ * 100) > 10 {
-						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-						fmt.Println("\nBuy symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
-						//fmt.Printf("\n%v\n", nseLQD)
-					} else if ((tSQ - tBQ) / tSQ * 100) > 10 {
-						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
-						fmt.Println("\nSell symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
-						//fmt.Printf("\n%v\n", nseLQD)
+					if ((float64(tBQ) - float64(tSQ)) / float64(tSQ) * 100.00) > 10.00 {
+						
+						fmt.Println("\nBuy:", symbol, nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity, nseLQD.Data[0].LastPrice, nseLQD.Data[0].AveragePrice, "\n")
+						
+					} else if ((float64(tSQ) - float64(tBQ)) / float64(tBQ) * 100.00) > 10.00 {
+						
+						fmt.Println("\nSell:", symbol, nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity, nseLQD.Data[0].LastPrice, nseLQD.Data[0].AveragePrice, "\n")
+						
 					}
 				}
 			}

@@ -44,7 +44,7 @@ type Data struct {
 	PChange                  string `json:"pChange"`
 	AdhocMargin              string `json:"adhocMargin"`
 	CompanyName              string `json:"companyName"`
-	averagePrice             string `json:"averagePrice"`
+	AveragePrice             string `json:"averagePrice"`
 	SecDate                  string `json:"secDate"`
 	Series                   string `json:"series"`
 	IsinCode                 string `json:"isinCode"`
