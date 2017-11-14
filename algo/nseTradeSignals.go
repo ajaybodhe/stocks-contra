@@ -197,9 +197,9 @@ func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, 
 	for {
 		select {
 		case <-time.After(5 * time.Minute):
-			///fmt.Println("SYMBOL IS:", symbol)
+			fmt.Println("\n\nSYMBOL IS:", symbol)
 			nseLQD := api.GetNSELiveQuote(client, symbol)
-			//fmt.Printf("%d	%v	%v\n", len(nseLQD.Data), nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity)
+			fmt.Println("%d	%v	%v\n", len(nseLQD.Data), nseLQD.Data[0].TotalBuyQuantity, nseLQD.Data[0].TotalSellQuantity)
 			if nseLQD != nil &&
 				nseLQD.Data != nil &&
 				len(nseLQD.Data) >= 1 {
@@ -208,11 +208,11 @@ func NseLiveQuoteAnalyser(done <-chan bool, client *http.Client, symbol string, 
 				tBQ, _ := strconv.Atoi(totalBuyQty)
 				tSQ, _ := strconv.Atoi(totalSellQty)
 				if tBQ != 0 && tSQ != 0 {
-					if ((tBQ - tSQ) / tSQ * 100) > 20 {
+					if ((tBQ - tSQ) / tSQ * 100) > 10 {
 						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
 						fmt.Println("\nBuy symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
 						//fmt.Printf("\n%v\n", nseLQD)
-					} else if ((tSQ - tBQ) / tSQ * 100) > 50 {
+					} else if ((tSQ - tBQ) / tSQ * 100) > 10 {
 						//((nseLQD.Data[0].TotalBuyQuantity-nseLQD.Data[0].TotalSellQuantity)/nseLQD.Data[0].TotalSellQuantity*100) > 20 {
 						fmt.Println("\nSell symbol:", symbol, "	strategy:", strategy, "TotalBuyQuantity", nseLQD.Data[0].TotalBuyQuantity, "TotalSellQuantity", nseLQD.Data[0].TotalSellQuantity, "\n")
 						//fmt.Printf("\n%v\n", nseLQD)

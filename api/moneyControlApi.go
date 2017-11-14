@@ -357,18 +357,20 @@ func httpMoneycontrolLiveQuoteURL(client *http.Client, symbol, symbolComma, symb
 	buf.ReadFrom(reader)
 	str := buf.String()
 	str = strings.TrimSpace(str)
-	str = str[len("suggest1("):len(str)-1]
-	autoSuggestions :=  []coreStructures.MoneyControlAutoSuggestion{}
-	
-	json.Unmarshal([]byte(str), &autoSuggestions)
-	
-	for i:=0; i<len(autoSuggestions); i++ {
-		as := &autoSuggestions[i]
+	if len(str) > len("suggest1(") {
+		str = str[len("suggest1("):len(str) - 1]
+		autoSuggestions := []coreStructures.MoneyControlAutoSuggestion{}
 		
-		if strings.Contains(as.PdtDsNm, symbol) {
-			fmt.Println("this is it:::::")
-			fmt.Println(as.LinkSrc)
-			return as.LinkSrc, getHttpQuoteFile(as.LinkSrc), true
+		json.Unmarshal([]byte(str), &autoSuggestions)
+		
+		for i := 0; i < len(autoSuggestions); i++ {
+			as := &autoSuggestions[i]
+			
+			if strings.Contains(as.PdtDsNm, symbol) {
+				fmt.Println("this is it:::::")
+				fmt.Println(as.LinkSrc)
+				return as.LinkSrc, getHttpQuoteFile(as.LinkSrc), true
+			}
 		}
 	}
 	//subStr := strings.Split(quoteDataStr, "a href=\"")

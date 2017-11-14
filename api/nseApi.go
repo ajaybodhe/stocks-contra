@@ -52,8 +52,17 @@ func getNSEIndexList(client *http.Client, proddbhandle util.DB, list map[string]
 			glog.Errorln(err)
 		}
 		//defer file.Close()
-
-		size, err := io.Copy(file, resp.Body)
+		
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, err = gzip.NewReader(resp.Body)
+			defer reader.Close()
+		default:
+			reader = resp.Body
+		}
+		
+		size, err := io.Copy(file, reader)
 		if err != nil {
 			glog.Errorln(err)
 		}
@@ -143,8 +152,19 @@ func GetNSESecuritiesFullBhavData(client *http.Client, proddbhandle util.DB, del
 	if err != nil {
 		fmt.Println(err)
 	}
+	
+	
+	var reader io.ReadCloser
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, err = gzip.NewReader(resp.Body)
+		defer reader.Close()
+	default:
+		reader = resp.Body
+	}
+	
 	//defer file.Close()
-	size, err := io.Copy(file, resp.Body)
+	size, err := io.Copy(file, reader)
 	if err != nil {
 		fmt.Println(err)
 	}

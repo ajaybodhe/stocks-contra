@@ -47,7 +47,8 @@ func deleteOldNSESecuritiesBuySignalData(db util.DB) error {
 }
 
 func RetrieveAllSymbolsNStrategy(db util.DB) (map[string]int, error) {
-	sqlQ := "select Nse.symbol, IFNULL(Trade.strategy_id,0) from (select distinct symbol from NSESecuritiesFullBhavData) AS Nse LEFT OUTER JOIN (select * from NseSecurityLongSignalData where date = (select date from (select max(date) from NseSecurityLongSignalData) AS temp)) AS Trade on Nse.symbol=Trade.symbol;"
+	//sqlQ := "select Nse.symbol, IFNULL(Trade.strategy_id,0) from (select distinct symbol from NSESecuritiesFullBhavData) AS Nse LEFT OUTER JOIN (select * from NseSecurityLongSignalData where date = (select date from (select max(date) from NseSecurityLongSignalData) AS temp)) AS Trade on Nse.symbol=Trade.symbol;"
+	sqlQ:= "select symbol, 0 from NIFTY_50 union select symbol, 0 from NIFTY_NEXT_50;"
 	rows, err := db.Query(sqlQ)
 	if err != nil {
 		return nil, fmt.Errorf("RetrieveAllSymbolsNStrategy() details err: sql error:%s\n", err.Error())
@@ -67,6 +68,7 @@ func RetrieveAllSymbolsNStrategy(db util.DB) (map[string]int, error) {
 		symbolStrategyMap[symbol] = strategyId
 	}
 	if found {
+		fmt.Println("symbolStrategyMap", symbolStrategyMap)
 		return symbolStrategyMap, nil
 	}
 	return nil, fmt.Errorf("no data for security symbols")
