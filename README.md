@@ -1,4 +1,4 @@
-# stocks-contra
+# stocks-contra - stock recommendation system
 ##permissions
 sudo chmod 0777 -R /tmp/
 
